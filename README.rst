@@ -29,7 +29,8 @@ credit cards, easily!
   >>> transaction = saved_card.auth(200)
   >>> transaction.settle()
 
-Easy, right? Here's a list of the things we make that easy to do:
+Saucy Features
+--------------
 
 * Charge a credit card
 * Authorize a credit card charge, and settle it or release it later
