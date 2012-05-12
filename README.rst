@@ -7,7 +7,7 @@ awkward to use directly. Instead, you can use Authorize Sauce, which unifies
 all three Authorize.net APIs into one coherent Pythonic interface. Charge
 credit cards, easily!
 
-.. code-block:: python
+::
 
   >>> # Init the authorize client and a credit card
   >>> from authorize import AuthorizeClient, CreditCard
