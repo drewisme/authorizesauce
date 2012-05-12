@@ -1,10 +1,5 @@
 """
 Tests against the sandbox Authorize.net API. Slow, requires internet.
-
-Authorize.net developer login for test
-user: authorizepy0
-pass: ny2qgWTw
-gateway id: 355553
 """
 
 from datetime import date, timedelta
@@ -15,6 +10,11 @@ from unittest2 import skipUnless, TestCase
 from authorize import Address, AuthorizeClient, CreditCard
 from authorize.exceptions import AuthorizeResponseError
 
+
+# Authorize.net developer login for test
+# user: authorizepy0
+# pass: ny2qgWTw
+# gateway id: 355553
 
 SKIP_MESSAGE = 'Live tests only run if the AUTHORIZE_LIVE_TESTS ' \
     'environment variable is true.'
