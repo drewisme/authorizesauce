@@ -1,0 +1,77 @@
+import calendar
+from datetime import datetime
+import re
+
+from authorize.exceptions import AuthorizeInvalidError
+
+
+CARD_TYPES = {
+    'visa': r'4\d{12}(\d{3})?$',
+    'amex': r'37\d{13}$',
+    'mc': r'5[1-5]\d{14}$',
+    'discover': r'6011\d{12}',
+    'diners': r'(30[0-5]\d{11}|(36|38)\d{12})$'
+}
+
+class CreditCard(object):
+    """A representation of a credit card, with validation and such."""
+    def __init__(self, card_number=None, exp_year=None, exp_month=None,
+            cvv=None, first_name=None, last_name=None):
+        self.card_number = re.sub(r'\D', '', str(card_number))
+        self.exp_year = str(exp_year)
+        self.exp_month = str(exp_month)
+        self.cvv = str(cvv)
+        self.first_name = first_name
+        self.last_name = last_name
+        self.validate()
+
+    def __repr__(self):
+        return '<CreditCard {0.card_type} {0.safe_number}>'.format(self)
+
+    def validate(self):
+        """Raises an AuthorizeInvalidError if credit card is invalid."""
+        try:
+            num = map(int, self.card_number)
+        except ValueError:
+            raise AuthorizeInvalidError('Credit card number is not valid.')
+        if sum(num[::-2] + map(lambda d: sum(divmod(d * 2, 10)), num[-2::-2])) % 10:
+            raise AuthorizeInvalidError('Credit card number is not valid.')
+        if datetime.now() > self.expiration:
+            raise AuthorizeInvalidError('Credit card is expired.')
+        if not re.match(r'^[\d+]{3,4}$', self.cvv):
+            raise AuthorizeInvalidError('Credit card CVV is invalid format.')
+        if not self.card_type:
+            raise AuthorizeInvalidError('Credit card number is not valid.')
+
+    @property
+    def expiration(self):
+        return datetime(int(self.exp_year), int(self.exp_month),
+            calendar.monthrange(int(self.exp_year), int(self.exp_month))[1],
+            23, 59, 59)
+
+    @property
+    def safe_number(self):
+        """The card number with all but the last four digits masked."""
+        mask = '*' * (len(self.card_number) - 4)
+        return '{0}{1}'.format(mask, self.card_number[-4:])
+
+    @property
+    def card_type(self):
+        """The card issuer, such as Visa or Amex."""
+        for card_type, card_type_re in CARD_TYPES.items():
+            if re.match(card_type_re, self.card_number):
+                return card_type
+
+class Address(object):
+    """A representation of a billing address."""
+    def __init__(self, street=None, city=None, state=None, zip_code=None,
+            country='US'):
+        self.street = street
+        self.city = city
+        self.state = state
+        self.zip_code = zip_code
+        self.country = country
+
+    def __repr__(self):
+        return '<Address {0.street}, {0.city}, {0.state} {0.zip_code}>' \
+            .format(self)

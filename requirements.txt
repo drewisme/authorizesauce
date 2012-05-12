@@ -1,0 +1,4 @@
+# authorize
+suds==0.4
+mock==0.8.0
+unittest2==0.5.1
