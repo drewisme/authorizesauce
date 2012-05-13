@@ -49,3 +49,12 @@ Contents
 
 .. toctree::
    :maxdepth: 2
+
+   install
+   intro
+   client
+   creditcard
+   transaction
+   savedcard
+   recurring
+   development
