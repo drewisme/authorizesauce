@@ -26,7 +26,7 @@ credit cards, easily!
   '7713982|6743206'
 
   >>> # Use a saved card to auth a transaction, and settle later
-  >>> saved_card = authorize.saved_card('7713982|6743206')
+  >>> saved_card = client.saved_card('7713982|6743206')
   >>> transaction = saved_card.auth(200)
   >>> transaction.settle()
 
