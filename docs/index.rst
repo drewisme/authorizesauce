@@ -52,9 +52,7 @@ Contents
 
    install
    intro
+   data
    client
-   creditcard
-   transaction
-   savedcard
-   recurring
+   exceptions
    development

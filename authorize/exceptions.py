@@ -1,5 +1,5 @@
 class AuthorizeError(Exception):
-    """Base class for all Authorize.net client errors."""
+    """Base class for all errors."""
 
 class AuthorizeConnectionError(AuthorizeError):
     """Error communicating with the Authorize.net API."""

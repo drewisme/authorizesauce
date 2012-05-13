@@ -1,3 +1,8 @@
+"""
+This module provides the data structures for describing credit cards and
+addresses for use in executing charges.
+"""
+
 import calendar
 from datetime import datetime
 import re
@@ -14,7 +19,15 @@ CARD_TYPES = {
 }
 
 class CreditCard(object):
-    """A representation of a credit card, with validation and such."""
+    """
+    Represents a credit card that can be charged.
+    
+    Pass in the credit card number, expiration date, CVV code, and optionally
+    a first name and last name. The card will be validated upon instatiation
+    and will raise an
+    :doc:`AuthorizeInvalidError <authorize.exceptions.AuthorizeInvalidError>`
+    for invalid credit card numbers, past expiration dates, etc.
+    """
     def __init__(self, card_number=None, exp_year=None, exp_month=None,
             cvv=None, first_name=None, last_name=None):
         self.card_number = re.sub(r'\D', '', str(card_number))
@@ -29,7 +42,12 @@ class CreditCard(object):
         return '<CreditCard {0.card_type} {0.safe_number}>'.format(self)
 
     def validate(self):
-        """Raises an AuthorizeInvalidError if credit card is invalid."""
+        """
+        Validates the credit card data and raises an
+        :doc:`AuthorizeInvalidError <authorize.exceptions.AuthorizeInvalidError>`
+        if anything doesn't check out. You shouldn't have to call this
+        yourself.
+        """
         try:
             num = map(int, self.card_number)
         except ValueError:
@@ -45,25 +63,39 @@ class CreditCard(object):
 
     @property
     def expiration(self):
+        """
+        The credit card expiration date as a ``datetime`` object.
+        """
         return datetime(int(self.exp_year), int(self.exp_month),
             calendar.monthrange(int(self.exp_year), int(self.exp_month))[1],
             23, 59, 59)
 
     @property
     def safe_number(self):
-        """The card number with all but the last four digits masked."""
+        """
+        The credit card number with all but the last four digits masked. This
+        is useful for storing a representation of the card without keeping
+        sensitive data.
+        """
         mask = '*' * (len(self.card_number) - 4)
         return '{0}{1}'.format(mask, self.card_number[-4:])
 
     @property
     def card_type(self):
-        """The card issuer, such as Visa or Amex."""
+        """
+        The credit card issuer, such as Visa or American Express, which is
+        determined from the credit card number. Recognizes Visa, American
+        Express, MasterCard, Discover, and Diners Club.
+        """
         for card_type, card_type_re in CARD_TYPES.items():
             if re.match(card_type_re, self.card_number):
                 return card_type
 
 class Address(object):
-    """A representation of a billing address."""
+    """
+    Represents a billing address for a charge. Pass in the street, city, state
+    and zip code, and optionally country for the address.
+    """
     def __init__(self, street=None, city=None, state=None, zip_code=None,
             country='US'):
         self.street = street

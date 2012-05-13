@@ -48,6 +48,24 @@ environment variable:
 
     AUTHORIZE_LIVE_TESTS=1 ./tests/run_tests.py
 
+.. _authorize-net-documentation:
+
+Authorize.net documentation
+---------------------------
+
+The Authorize.net documentation somehow manages to be both overly verbose and
+fairly uninformative. That said, you can find it here:
+
+* `Developer site`_
+* `Advanced Integration Method`_
+* `Customer Information Manager`_
+* `Automated Recurring Billing`_
+
+.. _Developer site: http://developer.authorize.net/
+.. _Advanced Integration Method: http://www.authorize.net/support/AIM_guide.pdf
+.. _Customer Information Manager: http://www.authorize.net/support/CIM_SOAP_guide.pdf
+.. _Automated Recurring Billing: http://www.authorize.net/support/ARB_SOAP_guide.pdf
+
 Submitting bugs and patches
 ---------------------------
 
