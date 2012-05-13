@@ -25,7 +25,7 @@ class CreditCard(object):
     Pass in the credit card number, expiration date, CVV code, and optionally
     a first name and last name. The card will be validated upon instatiation
     and will raise an
-    :doc:`AuthorizeInvalidError <authorize.exceptions.AuthorizeInvalidError>`
+    :class:`AuthorizeInvalidError <authorize.exceptions.AuthorizeInvalidError>`
     for invalid credit card numbers, past expiration dates, etc.
     """
     def __init__(self, card_number=None, exp_year=None, exp_month=None,
@@ -44,7 +44,7 @@ class CreditCard(object):
     def validate(self):
         """
         Validates the credit card data and raises an
-        :doc:`AuthorizeInvalidError <authorize.exceptions.AuthorizeInvalidError>`
+        :class:`AuthorizeInvalidError <authorize.exceptions.AuthorizeInvalidError>`
         if anything doesn't check out. You shouldn't have to call this
         yourself.
         """
