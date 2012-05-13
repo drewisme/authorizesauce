@@ -142,8 +142,6 @@ class RecurringAPITests(TestCase):
         self.assertEqual(subscription.payment.creditCard.cardCode, '911')
         self.assertEqual(subscription.billTo.firstName, 'Jeff')
         self.assertEqual(subscription.billTo.lastName, 'Schenck')
-        self.assertEqual(subscription.paymentSchedule.interval.unit._name,
-            'months')
         self.assertEqual(subscription.paymentSchedule.interval.length, 1)
         self.assertEqual(subscription.paymentSchedule.startDate,
             start.strftime('%Y-%m-%d'))
@@ -153,8 +151,6 @@ class RecurringAPITests(TestCase):
         self.api.create_subscription(credit_card, 10, start, days=14,
             occurrences=10)
         subscription = service.call_args[0][1]
-        self.assertEqual(subscription.paymentSchedule.interval.unit._name,
-            'days')
         self.assertEqual(subscription.paymentSchedule.interval.length, 14)
 
         # Test with infinite occurrences
