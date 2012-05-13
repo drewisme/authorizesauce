@@ -1,4 +1,3 @@
-# authorize
-suds==0.4
+authorizesauce
 mock==0.8.0
 unittest2==0.5.1
