@@ -11,7 +11,7 @@ credit cards, easily!
 
   >>> # Init the authorize client and a credit card
   >>> from authorize import AuthorizeClient, CreditCard
-  >>> authorize = AuthorizeClient('285tUPuS', '58JKJ4T95uee75wd')
+  >>> client = AuthorizeClient('285tUPuS', '58JKJ4T95uee75wd')
   >>> cc = CreditCard('4111111111111111', '2018', '01', '911', 'Joe', 'Blow')
   >>> card = authorize.card(cc)
 
