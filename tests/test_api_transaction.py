@@ -78,7 +78,7 @@ class TransactionAPITests(TestCase):
         try:
             self.api._make_call({'a': '1', 'b': '2'})
         except AuthorizeResponseError as e:
-            self.assertEqual(str(e), 'This transaction has been declined.')
+            self.assertTrue(str(e).startswith('This transaction has been declined.'))
             self.assertEqual(e.full_response, PARSED_ERROR)
 
     def test_add_params(self):

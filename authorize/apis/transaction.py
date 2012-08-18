@@ -47,7 +47,8 @@ class TransactionAPI(object):
             raise AuthorizeConnectionError(e)
         fields = parse_response(response)
         if fields['response_code'] != '1':
-            e = AuthorizeResponseError(fields['response_reason_text'])
+            e = AuthorizeResponseError('%s full_response=%r' %
+                (fields['response_reason_text'], fields))
             e.full_response = fields
             raise e
         return fields
