@@ -39,7 +39,7 @@ not hard to do in Awesome Sauce::
     >>> # Reference the transaction from earlier
     >>> transaction = client.transaction('2171830830')
     >>> # Refund the earlier transaction, passing in the last four digits of the card for verification
-    >>> transaction.credit('1111')
+    >>> transaction.credit('1111', 100)
     <AuthorizeTransaction 2171830830>
 
 Authorize a credit card

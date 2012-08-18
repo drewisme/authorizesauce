@@ -102,26 +102,25 @@ class TransactionAPI(object):
             params['x_amount'] = str(amount)
         return self._make_call(params)
 
-    def credit(self, card_num, transaction_id=None, amount=None):
-        # Card num must be the full card number for unlinked credits. Card
-        # number can be the last four digits when transaction_id is provided.
-        # If transaction_id is provided, will attempt to refund the given
-        # transaction (refund amount cannot be greater, and cannot refund a
-        # transaction greater than 120 days old).
-        # If transaction_id is not provided, will attempt to create a credit
-        # to the card unlinked to any previous transaction. NOTE: Your
-        # Authorize.net account must be enabled for "expanded credits
-        # capability" (ECC) to do this.
-        # If transaction_id is provided, amount is optional. If provided,
-        # credits the account for a lower amount than the original charge. If
-        # not, credits the account for the full amount of the original charge.
+    def credit(self, card_num, transaction_id, amount):
+        # Authorize.net can do unlinked credits (not tied to a previous
+        # transaction) but we do not (at least for now).
+        # Provide the last four digits for the card number, as well as the
+        # transaction id and the amount to credit back.
+        # The following restrictions apply:
+        # - The transaction id must reference an existing, settled charge.
+        #   (Note that in production, settlement happens once daily.)
+        # - The amount of the credit (and the sum of all credits against this
+        #   original transaction) must be less than or equal to the original
+        #   charge amount.
+        # - The credit must be submitted within 120 days of the original
+        #   transaction being settled.
         params = self.base_params.copy()
         params['x_type'] = 'CREDIT'
         params['x_trans_id'] = transaction_id
-        params['x_card_num'] = card_num
-        if amount:
-            amount = Decimal(str(amount)).quantize(Decimal('0.01'))
-            params['x_amount'] = str(amount)
+        params['x_card_num'] = str(card_num)
+        amount = Decimal(str(amount)).quantize(Decimal('0.01'))
+        params['x_amount'] = str(amount)
         return self._make_call(params)
 
     def void(self, transaction_id):

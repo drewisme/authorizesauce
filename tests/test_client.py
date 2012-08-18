@@ -96,16 +96,6 @@ class ClientTests(TestCase):
         self.assertEqual(result.uid, '2171062816')
         self.assertEqual(result.full_response, TRANSACTION_RESULT)
 
-    def test_authorize_credit_card_credit(self):
-        self.client._transaction.credit.return_value = TRANSACTION_RESULT
-        card = AuthorizeCreditCard(self.client, self.credit_card)
-        result = card.credit(10)
-        self.assertEqual(self.client._transaction.credit.call_args,
-            (('4111111111111111',), {'amount': 10}))
-        self.assertTrue(isinstance(result, AuthorizeTransaction))
-        self.assertEqual(result.uid, '2171062816')
-        self.assertEqual(result.full_response, TRANSACTION_RESULT)
-
     def test_authorize_credit_card_save(self):
         self.client._customer.create_saved_profile.return_value = ('1', '2')
         card = AuthorizeCreditCard(self.client, self.credit_card)
@@ -157,17 +147,10 @@ class ClientTests(TestCase):
         self.client._transaction.credit.return_value = TRANSACTION_RESULT
         transaction = AuthorizeTransaction(self.client, '123')
 
-        # Test without amount
-        result = transaction.credit('1111')
-        self.assertEqual(self.client._transaction.credit.call_args,
-            (('1111',), {'transaction_id': '123', 'amount': None}))
-        self.assertTrue(isinstance(result, AuthorizeTransaction))
-        self.assertEqual(result.uid, '2171062816')
-
         # Test with amount
-        result = transaction.credit('1111', amount=10)
+        result = transaction.credit('1111', 10)
         self.assertEqual(self.client._transaction.credit.call_args,
-            (('1111',), {'transaction_id': '123', 'amount': 10}))
+            (('1111', '123', 10), {}))
         self.assertTrue(isinstance(result, AuthorizeTransaction))
         self.assertEqual(result.uid, '2171062816')
 
@@ -198,15 +181,6 @@ class ClientTests(TestCase):
         saved = AuthorizeSavedCard(self.client, '1|2')
         result = saved.capture(10)
         self.assertEqual(self.client._customer.capture.call_args,
-            (('1', '2', 10), {}))
-        self.assertTrue(isinstance(result, AuthorizeTransaction))
-        self.assertEqual(result.uid, '2171062816')
-
-    def test_authorize_saved_card_credit(self):
-        self.client._customer.credit.return_value = TRANSACTION_RESULT
-        saved = AuthorizeSavedCard(self.client, '1|2')
-        result = saved.credit(10)
-        self.assertEqual(self.client._customer.credit.call_args,
             (('1', '2', 10), {}))
         self.assertTrue(isinstance(result, AuthorizeTransaction))
         self.assertEqual(result.uid, '2171062816')

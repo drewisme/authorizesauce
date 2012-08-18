@@ -225,19 +225,3 @@ class CustomerAPITests(TestCase):
             transaction.profileTransAuthCapture.customerPaymentProfileId, '2')
         self.assertEqual(options, OPTIONS)
         self.assertEqual(result, PARSED_RESPONSE)
-
-    def test_credit(self):
-        service = self.api.client.service.CreateCustomerProfileTransaction
-        service.return_value = SUCCESS
-        result = self.api.credit('1', '2', 20)
-        transaction, options = service.call_args[0][1:]
-        self.assertEqual(transaction._kind, 'ProfileTransactionType')
-        self.assertEqual(transaction.profileTransRefund._kind,
-            'ProfileTransRefundType')
-        self.assertEqual(transaction.profileTransRefund.amount, '20.00')
-        self.assertEqual(
-            transaction.profileTransRefund.customerProfileId, '1')
-        self.assertEqual(
-            transaction.profileTransRefund.customerPaymentProfileId, '2')
-        self.assertEqual(options, OPTIONS)
-        self.assertEqual(result, PARSED_RESPONSE)

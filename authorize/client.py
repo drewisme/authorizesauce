@@ -22,7 +22,6 @@ from uuid import uuid4
 from authorize.apis.customer import CustomerAPI
 from authorize.apis.recurring import RecurringAPI
 from authorize.apis.transaction import TransactionAPI
-from authorize.exceptions import AuthorizeInvalidError
 
 
 class AuthorizeClient(object):
@@ -131,23 +130,6 @@ class AuthorizeCreditCard(object):
         transaction.full_response = response
         return transaction
 
-    def credit(self, amount):
-        """
-        Creates an unlinked credit on the card for the specified amount. (This
-        is different from a refunded transaction, which you initiate from an
-        :class:`AuthorizeTransaction <authorize.client.AuthorizeTransaction>`
-        instance.) This functionality must be enabled in your Authorize.net
-        account. Returns an
-        :class:`AuthorizeTransaction <authorize.client.AuthorizeTransaction>`
-        instance representing the transaction.
-        """
-        # Creates an "unlinked credit" (as opposed to refunding a previous transaction)
-        response = self._client._transaction.credit(
-            self.credit_card.card_number, amount=amount)
-        transaction = self._client.transaction(response['transaction_id'])
-        transaction.full_response = response
-        return transaction
-
     def save(self):
         """
         Saves the credit card on Authorize.net's servers so you can create
@@ -240,19 +222,32 @@ class AuthorizeTransaction(object):
         transaction.full_response = response
         return transaction
 
-    def credit(self, card_number, amount=None):
+    def credit(self, card_number, amount):
         """
-        Creates a credit back on the original transaction. (The original
-        transaction must already be settled.) The ``card_number`` should be
-        just the last four digits of the card. If ``amount`` is not provided,
-        it will refund the entire amount of the original transaction; if a
-        lower ``amount`` is provided, it will create a partial refund. Returns
-        an
+        Creates a credit (refund) back on the original transaction. The
+        ``card_number`` should be the last four digits of the credit card
+        and the ``amount`` is the amount to credit the card. Returns an
         :class:`AuthorizeTransaction <authorize.client.AuthorizeTransaction>`
         instance representing the credit transaction.
+        
+        Credit transactions are bound by a number of restrictions:
+        
+        * The original transaction must be an existing, settled charge. (Note
+          that this is different than merely calling the
+          :meth:`AuthorizeTransaction.settle <authorize.client.AuthorizeTransaction.settle>`
+          method, which submits a payment for settlement. In production,
+          Authorize.net actually settles charges once daily. Until a charge is
+          settled, you should use
+          :meth:`AuthorizeTransaction.void <authorize.client.AuthorizeTransaction.void>`
+          instead.)
+        * The amount of the credit (as well as the sum of all credits against
+          this original transaction) must be less than or equal to the
+          original amount charged.
+        * The credit transaction must be submitted within 120 days of the date
+          the original transaction was settled.
         """
         response = self._client._transaction.credit(
-            card_number, transaction_id=self.uid, amount=amount)
+            card_number, self.uid, amount)
         transaction = self._client.transaction(response['transaction_id'])
         transaction.full_response = response
         return transaction
@@ -311,22 +306,6 @@ class AuthorizeSavedCard(object):
         instance representing the transaction.
         """
         response = self._client._customer.capture(
-            self._profile_id, self._payment_id, amount)
-        transaction = self._client.transaction(response['transaction_id'])
-        transaction.full_response = response
-        return transaction
-
-    def credit(self, amount):
-        """
-        Creates an unlinked credit on the card for the specified amount. (This
-        is different from a refunded transaction, which you initiate from an
-        :class:`AuthorizeTransaction <authorize.client.AuthorizeTransaction>`
-        instance.) This functionality must be enabled in your Authorize.net
-        account. Returns an
-        :class:`AuthorizeTransaction <authorize.client.AuthorizeTransaction>`
-        instance representing the transaction.
-        """
-        response = self._client._customer.credit(
             self._profile_id, self._payment_id, amount)
         transaction = self._client.transaction(response['transaction_id'])
         transaction.full_response = response

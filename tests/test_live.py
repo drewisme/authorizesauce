@@ -47,7 +47,6 @@ class AuthorizeLiveTests(TestCase):
         saved = card.save()
         saved.auth(self.amount1).settle()
         saved.capture(self.amount1)
-        saved.credit(self.amount1)
         saved_from_id = self.client.saved_card(saved.uid)
         saved_from_id.delete()
 

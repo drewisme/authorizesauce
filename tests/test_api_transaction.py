@@ -162,31 +162,13 @@ class TransactionAPITests(TestCase):
     def test_credit(self, urlopen):
         urlopen.side_effect = self.success
 
-        # Test with transaction_id, no amount
-        result = self.api.credit('1111', transaction_id='123456')
-        self.assertEqual(urlopen.call_args[0][0],
-            'https://test.authorize.net/gateway/transact.dll?x_login=123'
-            '&x_trans_id=123456&x_version=3.1&x_delim_char=%3B&x_type=CREDIT'
-            '&x_card_num=1111&x_delim_data=TRUE&x_tran_key=456'
-            '&x_test_request=FALSE')
-        self.assertEqual(result, PARSED_SUCCESS)
-
         # Test with transaction_id, amount
-        result = self.api.credit('1111', transaction_id='123456', amount=10)
+        result = self.api.credit('1111', '123456', 10)
         self.assertEqual(urlopen.call_args[0][0],
             'https://test.authorize.net/gateway/transact.dll?x_login=123'
             '&x_trans_id=123456&x_version=3.1&x_amount=10.00&x_delim_char=%3B'
             '&x_type=CREDIT&x_card_num=1111&x_delim_data=TRUE&x_tran_key=456'
             '&x_test_request=FALSE')
-        self.assertEqual(result, PARSED_SUCCESS)
-
-        # Test with no transaction_id
-        result = self.api.credit('4111111111111111', amount=10)
-        self.assertEqual(urlopen.call_args[0][0],
-            'https://test.authorize.net/gateway/transact.dll?x_login=123'
-            '&x_trans_id=None&x_version=3.1&x_amount=10.00&x_delim_char=%3B'
-            '&x_type=CREDIT&x_card_num=4111111111111111&x_delim_data=TRUE'
-            '&x_tran_key=456&x_test_request=FALSE')
         self.assertEqual(result, PARSED_SUCCESS)
 
     @mock.patch('authorize.apis.transaction.urllib.urlopen')
