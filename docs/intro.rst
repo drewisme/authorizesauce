@@ -8,6 +8,36 @@ creating recurring payments.
 For the full scoop on interacting with the Authorize Sauce client, see the
 :doc:`client` documentation.
 
+First, some terminology
+-----------------------
+
+The payments world uses some pretty wonky terms for working with credit cards,
+so let's define our terms right up front.
+
+**capture**
+    The credit card is first authorized for the given transaction amount, and
+    if approved, is automatically submitted for settlement. This is very much
+    like when a store clerk swipes your card at the register.
+
+**auth**
+    The credit card is temporarily authorized for a given amount without
+    actually submitting it for settlement. This allows you to guarantee you'll
+    be able to charge the card, but to hold off in case you later need to
+    release the authorization or charge a lower amount. This transaction is
+    not completed until you explicitly submit it for settlement.
+
+**settle**
+    A previous authorization transaction is submitted for settlement. This can
+    be for any amount up to the original authorization amount.
+
+**void**
+    Cancel a previous authorization transaction.
+
+**credit**
+    Refunds part or all of a previously settled transaction. (Note that it
+    must actually be settled, not just submitted for settlement. This can take
+    up to 24 hours.)
+
 Initialize the client
 ---------------------
 
