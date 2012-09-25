@@ -49,7 +49,12 @@ class CustomerAPI(object):
             raise AuthorizeConnectionError('Error contacting SOAP API.')
         if response.resultCode != 'Ok':
             error = response.messages[0][0]
-            raise AuthorizeResponseError('%s: %s' % (error.code, error.text))
+            e = AuthorizeResponseError('%s: %s' % (error.code, error.text))
+            e.full_response = {
+                'response_code': error.code,
+                'response_text': error.text,
+            }
+            raise e
         return response
 
     def create_saved_profile(self, internal_id, payments=None):
