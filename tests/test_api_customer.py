@@ -106,9 +106,11 @@ class CustomerAPITests(TestCase):
     def test_create_saved_profile(self):
         service = self.api.client.service.CreateCustomerProfile
         service.return_value = SUCCESS
+        email = 'example@example.com'
 
         # Without payments
-        profile_id, payment_ids = self.api.create_saved_profile(123)
+        profile_id, payment_ids = self.api.create_saved_profile(
+            123, email=email)
         profile = service.call_args[0][1]
         self.assertEqual(profile._kind, 'CustomerProfileType')
         self.assertEqual(profile.merchantCustomerId, 123)
@@ -116,6 +118,7 @@ class CustomerAPITests(TestCase):
             'ArrayOfCustomerPaymentProfileType')
         self.assertEqual(profile_id, '123456')
         self.assertEqual(payment_ids, None)
+        self.assertEqual(profile.email, email)
 
         # With payments
         payment = mock.Mock()

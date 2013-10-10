@@ -16,13 +16,21 @@ Authorize.net_.
 .. _Authorize.net: http://developer.authorize.net/
 
 """
-
 from uuid import uuid4
 
 from authorize.apis.customer import CustomerAPI
 from authorize.apis.recurring import RecurringAPI
 from authorize.apis.transaction import TransactionAPI
 
+_ga = object.__getattribute__
+
+
+def _ha(obj, name):
+    try:
+        _ga(obj, name)
+        return True
+    except AttributeError:
+        return False
 
 class AuthorizeClient(object):
     """
@@ -47,7 +55,7 @@ class AuthorizeClient(object):
         self._recurring = RecurringAPI(login_id, transaction_key, debug, test)
         self._customer = CustomerAPI(login_id, transaction_key, debug, test)
 
-    def card(self, credit_card, address=None):
+    def card(self, credit_card, address=None, email=None, profile_id=None):
         """
         To work with a credit card, pass in a
         :class:`CreditCard <authorize.data.CreditCard>` instance, and
@@ -56,7 +64,8 @@ class AuthorizeClient(object):
         :class:`AuthorizeCreditCard <authorize.client.AuthorizeCreditCard>`
         instance you can then use to execute transactions.
         """
-        return AuthorizeCreditCard(self, credit_card, address=address)
+        return AuthorizeCreditCard(self, credit_card, address=address,
+                                   email=None)
 
     def transaction(self, uid):
         """
@@ -94,10 +103,11 @@ class AuthorizeCreditCard(object):
     Any operation performed on this instance returns another instance you can
     work with, such as a transaction, saved card, or recurring payment.
     """
-    def __init__(self, client, credit_card, address=None):
+    def __init__(self, client, credit_card, address=None, email=None):
         self._client = client
         self.credit_card = credit_card
         self.address = address
+        self.email = email
 
     def __repr__(self):
         return '<AuthorizeCreditCard {0.credit_card.card_type} ' \
@@ -141,7 +151,7 @@ class AuthorizeCreditCard(object):
         payment = self._client._customer.create_saved_payment(
             self.credit_card, address=self.address)
         profile_id, payment_ids = self._client._customer \
-            .create_saved_profile(unique_id, [payment])
+            .create_saved_profile(unique_id, [payment], email=self.email)
         uid = '{0}|{1}'.format(profile_id, payment_ids[0])
         return self._client.saved_card(uid)
 
@@ -264,6 +274,7 @@ class AuthorizeTransaction(object):
         transaction.full_response = response
         return transaction
 
+
 class AuthorizeSavedCard(object):
     """
     This is the interface for working with a saved credit card. It is returned
@@ -275,14 +286,45 @@ class AuthorizeSavedCard(object):
     and credits. Or you can delete this card from the Authorize.net database.
     The first three operations will all return a transaction instance to work
     with.
+
+    You can also retrieve payment information. The properties ``first_name`` and
+    ``last_name`` can be used to get the name on the card, and the ``address``
+    property will get an  :class:`Address <authorize.data.Address>`
+    instance containing the address information on the card.
+
+    You can update this information by setting it and running the
+    :meth:`AuthorizeCreditCard.update <authorize.client.AuthorizeCreditCard.update>`
+    method. For example:
     """
+
+    _lazy_props = [
+        'first_name', 'last_name', 'address', 'email', 'full_profile']
+
     def __init__(self, client, uid):
         self._client = client
         self.uid = uid
+        self.pulled = False
         self._profile_id, self._payment_id = uid.split('|')
+
+    def __getattr__(self, item):
+        if item in _ga(self, '_lazy_props'):
+            item = '_' + item
+            if not _ga(self, 'pulled'):
+                _ga(self, 'get_profile')()
+        return _ga(self, item)
 
     def __repr__(self):
         return '<AuthorizeSavedCard {0.uid}>'.format(self)
+
+    def get_profile(self):
+        results = self._client._customer.retrieve_saved_payment(
+            self._profile_id, self._payment_id)
+        lazy_props = ['_' + prop for prop in self._lazy_props]
+        props = zip(lazy_props, results)
+        for name, value in props:
+            if not _ha(self, name):
+                setattr(self, name, value)
+        self.pulled = True
 
     def auth(self, amount):
         """
@@ -311,12 +353,23 @@ class AuthorizeSavedCard(object):
         transaction.full_response = response
         return transaction
 
+    def update(self):
+        """
+        Update the payment profile information.
+        """
+        self._client._customer.update_saved_payment(
+            self._profile_id, self._payment_id, self.full_profile,
+            address=self.address, first_name=self.first_name,
+            last_name=self.last_name, email=self.email)
+
     def delete(self):
         """
         Removes this saved card from the Authorize.net database.
         """
         self._client._customer.delete_saved_payment(
             self._profile_id, self._payment_id)
+
+
 
 class AuthorizeRecurring(object):
     """

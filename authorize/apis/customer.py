@@ -1,12 +1,14 @@
 from decimal import Decimal
+from pprint import pprint
 import urllib
 
 from suds import WebFault
 from suds.client import Client
+from authorize.data import Address
 
 from authorize.apis.transaction import parse_response
 from authorize.exceptions import AuthorizeConnectionError, \
-    AuthorizeResponseError
+    AuthorizeError, AuthorizeResponseError
 
 
 PROD_URL = 'https://api.authorize.net/soap/v1/Service.asmx?WSDL'
@@ -57,7 +59,7 @@ class CustomerAPI(object):
             raise e
         return response
 
-    def create_saved_profile(self, internal_id, payments=None):
+    def create_saved_profile(self, internal_id, payments=None, email=None):
         """
         Creates a user profile to which you can attach saved payments.
         Requires an internal_id to uniquely identify this user. If a list of
@@ -67,6 +69,7 @@ class CustomerAPI(object):
         """
         profile = self.client.factory.create('CustomerProfileType')
         profile.merchantCustomerId = internal_id
+        profile.email = email
         if payments:
             payment_array = self.client.factory.create(
                 'ArrayOfCustomerPaymentProfileType')
@@ -78,6 +81,20 @@ class CustomerAPI(object):
         if payments:
             payment_ids = response.customerPaymentProfileIdList[0]
         return profile_id, payment_ids
+
+    @staticmethod
+    def _address_to_profile(address, payment_profile):
+        if address and address.street:
+            payment_profile.billTo.address = address.street
+        if address and address.city:
+            payment_profile.billTo.city = address.city
+        if address and address.state:
+            payment_profile.billTo.state = address.state
+        if address and address.zip_code:
+            payment_profile.billTo.zip = address.zip_code
+        if address and address.country:
+            payment_profile.billTo.country = address.country
+        return payment_profile
 
     def create_saved_payment(self, credit_card, address=None, profile_id=None):
         """
@@ -105,16 +122,7 @@ class CustomerAPI(object):
             payment_profile.billTo.firstName = credit_card.first_name
         if credit_card.last_name:
             payment_profile.billTo.lastName = credit_card.last_name
-        if address and address.street:
-            payment_profile.billTo.address = address.street
-        if address and address.city:
-            payment_profile.billTo.city = address.city
-        if address and address.state:
-            payment_profile.billTo.state = address.state
-        if address and address.zip_code:
-            payment_profile.billTo.zip = address.zip_code
-        if address and address.country:
-            payment_profile.billTo.country = address.country
+        payment_profile = self._address_to_profile(address, payment_profile)
 
         # If a profile id is provided, create saved payment on that profile
         # Otherwise, return an object for a later call to create_saved_profile
@@ -124,6 +132,69 @@ class CustomerAPI(object):
             return response.customerPaymentProfileId
         else:
             return payment_profile
+
+    def retrieve_saved_payment(self, profile_id, payment_id):
+        PROFILE = 0
+        payment_id = int(payment_id)
+        profile = self._make_call(
+            'GetCustomerProfile', profile_id)
+        pprint(profile)
+        profile = profile.profile
+        email = None
+        if hasattr(profile, 'email'):
+            email = profile.email
+        for _, payment in profile.paymentProfiles:
+            payment = payment[PROFILE]
+            if payment.customerPaymentProfileId == payment_id:
+                break
+        else:
+            raise AuthorizeError("Payment ID does not exist for this profile.")
+
+        data = payment.billTo
+        first_name = getattr(data, 'firstName', '')
+        last_name = getattr(data, 'lastName', '')
+        kwargs = {
+            'street': getattr(data, 'address', None),
+            'city': getattr(data, 'city', None),
+            'state': getattr(data, 'state', None),
+            'zip_code': getattr(data, 'zip', None),
+            'country': getattr(data, 'country', None)}
+        return first_name, last_name, Address(**kwargs), email, payment
+
+    def update_saved_payment(self, profile_id, payment_id, old_payment_profile,
+                             address=None, first_name=None, last_name=None,
+                             email=None):
+        payment_profile = self.client.factory.create(
+            'CustomerPaymentProfileExType')
+        customer_type_enum = self.client.factory.create('CustomerTypeEnum')
+        payment_profile.customerType = customer_type_enum.individual
+        payment_simple_type = self.client.factory.create('PaymentType')
+        card_simple_type = self.client.factory.create('CreditCardSimpleType')
+        number = old_payment_profile.payment.creditCard.cardNumber
+        date = old_payment_profile.payment.creditCard.expirationDate
+        card_simple_type.cardNumber = number
+        card_simple_type.expirationDate = date
+        payment_simple_type.creditCard = card_simple_type
+        payment_profile.payment = payment_simple_type
+        payment_profile.payment.creditCard = card_simple_type
+        payment_profile.customerPaymentProfileId = payment_id
+
+        if first_name:
+            payment_profile.billTo.firstName = first_name
+        if last_name:
+            payment_profile.billTo.lastName = last_name
+        payment_profile = self._address_to_profile(address, payment_profile)
+
+        self._make_call(
+            'UpdateCustomerPaymentProfile', profile_id,
+            payment_profile, 'none')
+
+        if not email:
+            return
+        profile = self.client.factory.create('CustomerProfileExType')
+        profile.email = email
+        profile.customerProfileId = profile_id
+        self._make_call('UpdateCustomerProfile', profile)
 
     def delete_saved_profile(self, profile_id):
         self._make_call('DeleteCustomerProfile', profile_id)
