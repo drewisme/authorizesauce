@@ -1,5 +1,4 @@
 from decimal import Decimal
-from pprint import pprint
 import urllib
 
 from suds import WebFault
@@ -138,7 +137,6 @@ class CustomerAPI(object):
         payment_id = int(payment_id)
         profile = self._make_call(
             'GetCustomerProfile', profile_id)
-        pprint(profile)
         profile = profile.profile
         email = None
         if hasattr(profile, 'email'):
