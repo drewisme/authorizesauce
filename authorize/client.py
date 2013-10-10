@@ -55,7 +55,7 @@ class AuthorizeClient(object):
         self._recurring = RecurringAPI(login_id, transaction_key, debug, test)
         self._customer = CustomerAPI(login_id, transaction_key, debug, test)
 
-    def card(self, credit_card, address=None, email=None, profile_id=None):
+    def card(self, credit_card, address=None, email=None):
         """
         To work with a credit card, pass in a
         :class:`CreditCard <authorize.data.CreditCard>` instance, and
@@ -65,7 +65,7 @@ class AuthorizeClient(object):
         instance you can then use to execute transactions.
         """
         return AuthorizeCreditCard(self, credit_card, address=address,
-                                   email=None)
+                                   email=email)
 
     def transaction(self, uid):
         """
@@ -298,7 +298,10 @@ class AuthorizeSavedCard(object):
     """
 
     _lazy_props = [
-        'first_name', 'last_name', 'address', 'email', 'full_profile']
+        'first_name', 'last_name', 'address', 'email', 'payment']
+
+    _masked_props = [
+        'exp_year', 'exp_month']
 
     def __init__(self, client, uid):
         self._client = client
@@ -311,6 +314,10 @@ class AuthorizeSavedCard(object):
             item = '_' + item
             if not _ga(self, 'pulled'):
                 _ga(self, 'get_profile')()
+        if item in _ga(self, '_masked_props'):
+            if not _ha(self, item):
+                raise AttributeError("This field is masked by authorize.net."
+                                     " It cannot be retrieved.")
         return _ga(self, item)
 
     def __repr__(self):
@@ -319,9 +326,8 @@ class AuthorizeSavedCard(object):
     def get_profile(self):
         results = self._client._customer.retrieve_saved_payment(
             self._profile_id, self._payment_id)
-        lazy_props = ['_' + prop for prop in self._lazy_props]
-        props = zip(lazy_props, results)
-        for name, value in props:
+        for name, value in results.items():
+            name = '_' + name
             if not _ha(self, name):
                 setattr(self, name, value)
         self.pulled = True
@@ -353,14 +359,56 @@ class AuthorizeSavedCard(object):
         transaction.full_response = response
         return transaction
 
-    def update(self):
+    def update(self, **kwargs):
         """
-        Update the payment profile information.
+        Updates information about a saved card. You can use this to change the
+        address associated with the card, or the name, or the user's email
+        address. You may even update the expiration date.
+
+        ``first_name`` *(optional)*
+            The first name on the card.
+
+        ``start`` *(optional)*
+            The last name on the card
+
+        ``address`` *(optional)*
+            An :class:`Address <authorize.data.Address>` object that holds new
+            billing address information for the card.
+
+        ``email`` *(optional)*
+            Updates the email associated with the card. Note that emails are
+            actually stored on the customer profile. If you have multiple cards
+            (payments) with the same profile, this will update the email for
+            all of them.
+
+        ``exp_month`` *(conditional)*
+            If this option is specified, ``exp_year`` must also be specified,
+            or it will be ignored.
+
+            An integer representing the month of the card's expiration date.
+
+        ``exp_year`` *(conditional)*
+            If this option is specified, ``exp_month`` must also be specified,
+            or it will be ignored.
+
+            An integer representing the year of the card's expiration date.
         """
+        settings = {
+            prop: getattr(self, prop) for prop in self._lazy_props}
+        masked_settings = {
+            prop: getattr(self, prop, None) for prop in self._masked_props}
+        settings.update(masked_settings)
+        settings.update(kwargs)
         self._client._customer.update_saved_payment(
-            self._profile_id, self._payment_id, self.full_profile,
-            address=self.address, first_name=self.first_name,
-            last_name=self.last_name, email=self.email)
+            self._profile_id, self._payment_id, **settings)
+
+        # Make sure the local variables are updated with the new information.
+        for setting, value in settings.items():
+            if setting in self._lazy_props:
+                setattr(self, setting, value)
+            elif setting in self._masked_props:
+                if value:
+                    setattr(self, setting, value)
 
     def delete(self):
         """

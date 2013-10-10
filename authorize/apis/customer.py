@@ -1,14 +1,14 @@
 from decimal import Decimal
 import urllib
+from datetime import datetime
 
 from suds import WebFault
 from suds.client import Client
-from authorize.data import Address
+from authorize.data import Address, CreditCard
 
 from authorize.apis.transaction import parse_response
 from authorize.exceptions import AuthorizeConnectionError, \
-    AuthorizeError, AuthorizeResponseError
-
+    AuthorizeError, AuthorizeResponseError, AuthorizeInvalidError
 
 PROD_URL = 'https://api.authorize.net/soap/v1/Service.asmx?WSDL'
 TEST_URL = 'https://apitest.authorize.net/soap/v1/Service.asmx?WSDL'
@@ -136,61 +136,69 @@ class CustomerAPI(object):
         PROFILE = 0
         payment_id = int(payment_id)
         profile = self._make_call(
-            'GetCustomerProfile', profile_id)
-        profile = profile.profile
+            'GetCustomerProfile', profile_id).profile
+        payment_info = {}
         email = None
         if hasattr(profile, 'email'):
             email = profile.email
+        payment_info['email'] = email
         for _, payment in profile.paymentProfiles:
             payment = payment[PROFILE]
             if payment.customerPaymentProfileId == payment_id:
                 break
         else:
             raise AuthorizeError("Payment ID does not exist for this profile.")
-
+        payment_info['payment'] = payment
         data = payment.billTo
-        first_name = getattr(data, 'firstName', '')
-        last_name = getattr(data, 'lastName', '')
+        payment_info['first_name'] = getattr(data, 'firstName', '')
+        payment_info['last_name'] = getattr(data, 'lastName', '')
         kwargs = {
             'street': getattr(data, 'address', None),
             'city': getattr(data, 'city', None),
             'state': getattr(data, 'state', None),
             'zip_code': getattr(data, 'zip', None),
             'country': getattr(data, 'country', None)}
-        return first_name, last_name, Address(**kwargs), email, payment
+        payment_info['address'] = Address(**kwargs)
+        return payment_info
 
-    def update_saved_payment(self, profile_id, payment_id, old_payment_profile,
-                             address=None, first_name=None, last_name=None,
-                             email=None):
+    def update_saved_payment(self, profile_id, payment_id, **kwargs):
         payment_profile = self.client.factory.create(
             'CustomerPaymentProfileExType')
         customer_type_enum = self.client.factory.create('CustomerTypeEnum')
         payment_profile.customerType = customer_type_enum.individual
         payment_simple_type = self.client.factory.create('PaymentType')
         card_simple_type = self.client.factory.create('CreditCardSimpleType')
-        number = old_payment_profile.payment.creditCard.cardNumber
-        date = old_payment_profile.payment.creditCard.expirationDate
+        number = kwargs['payment'].payment.creditCard.cardNumber
+        date = kwargs['payment'].payment.creditCard.expirationDate
         card_simple_type.cardNumber = number
-        card_simple_type.expirationDate = date
+        if kwargs['exp_month'] and kwargs['exp_year']:
+            exp = CreditCard.exp_time(kwargs['exp_month'], kwargs['exp_year'])
+            if exp <= datetime.now():
+                raise AuthorizeInvalidError('This credit card has expired.')
+            card_simple_type.expirationDate =\
+                '{0}-{1:0>2}'.format(kwargs['exp_year'], kwargs['exp_month'])
+        else:
+            card_simple_type.expirationDate = date
         payment_simple_type.creditCard = card_simple_type
         payment_profile.payment = payment_simple_type
         payment_profile.payment.creditCard = card_simple_type
         payment_profile.customerPaymentProfileId = payment_id
 
-        if first_name:
-            payment_profile.billTo.firstName = first_name
-        if last_name:
-            payment_profile.billTo.lastName = last_name
-        payment_profile = self._address_to_profile(address, payment_profile)
+        if kwargs['first_name']:
+            payment_profile.billTo.firstName = kwargs['first_name']
+        if kwargs['last_name']:
+            payment_profile.billTo.lastName = kwargs['last_name']
+        payment_profile = self._address_to_profile(
+            kwargs['address'], payment_profile)
 
         self._make_call(
             'UpdateCustomerPaymentProfile', profile_id,
             payment_profile, 'none')
 
-        if not email:
+        if not kwargs['email']:
             return
         profile = self.client.factory.create('CustomerProfileExType')
-        profile.email = email
+        profile.email = kwargs['email']
         profile.customerProfileId = profile_id
         self._make_call('UpdateCustomerProfile', profile)
 
