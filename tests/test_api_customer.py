@@ -1,5 +1,4 @@
 from datetime import date
-from pprint import pprint
 
 import mock
 from suds import WebFault
@@ -25,7 +24,7 @@ RESPONSE = (
 
 BILL_TO = AttrDict({
     'firstName': 'Jeff',
-    'lastName': 'Schneck',
+    'lastName': 'Schenck',
     'address': '45 Rose Ave',
     'city': 'Venice',
     'state': 'CA',
@@ -234,7 +233,7 @@ class CustomerAPITests(TestCase):
 
         payment = self.api.retrieve_saved_payment('123456', '123458')
         self.assertEqual(payment['first_name'], 'Jeff')
-        self.assertEqual(payment['last_name'], 'Schneck')
+        self.assertEqual(payment['last_name'], 'Schenck')
         self.assertEqual(payment['address'].street, address.street)
         self.assertEqual(payment['address'].city, address.city)
         self.assertEqual(payment['address'].state, address.state)
@@ -251,7 +250,7 @@ class CustomerAPITests(TestCase):
         address = Address(street='45 Rose Ave', city='Venice', state='CA',
                           zip_code='90291', country='US')
         kwargs = {
-            'first_name': 'Jeff', 'last_name': 'Schneck', 'address': address,
+            'first_name': 'Jeff', 'last_name': 'Schenck', 'address': address,
             'email': 'example@example.com', 'exp_month': '10',
             'exp_year': int(date.today().year + 10)}
         self.api.update_saved_payment(
