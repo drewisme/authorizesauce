@@ -96,6 +96,7 @@ class CreditCard(object):
             if re.match(card_type_re, self.card_number):
                 return card_type
 
+
 class Address(object):
     """
     Represents a billing address for a charge. Pass in the street, city, state

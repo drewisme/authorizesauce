@@ -133,7 +133,6 @@ class CustomerAPI(object):
             return payment_profile
 
     def retrieve_saved_payment(self, profile_id, payment_id):
-        PROFILE = 0
         payment_id = int(payment_id)
         profile = self._make_call(
             'GetCustomerProfile', profile_id).profile
@@ -142,14 +141,16 @@ class CustomerAPI(object):
         if hasattr(profile, 'email'):
             email = profile.email
         payment_info['email'] = email
+        saved_payment = None
         for _, payment in profile.paymentProfiles:
-            payment = payment[PROFILE]
+            payment = payment[0]
             if payment.customerPaymentProfileId == payment_id:
+                saved_payment = payment
                 break
-        else:
+        if not saved_payment:
             raise AuthorizeError("Payment ID does not exist for this profile.")
-        payment_info['payment'] = payment
-        data = payment.billTo
+        payment_info['payment'] = saved_payment
+        data = saved_payment.billTo
         payment_info['first_name'] = getattr(data, 'firstName', '')
         payment_info['last_name'] = getattr(data, 'lastName', '')
         kwargs = {
@@ -161,15 +162,16 @@ class CustomerAPI(object):
         payment_info['address'] = Address(**kwargs)
         return payment_info
 
-    def update_saved_payment(self, profile_id, payment_id, **kwargs):
+    def update_saved_payment(self, profile_id, payment_id, base_profile,
+                             **kwargs):
         payment_profile = self.client.factory.create(
             'CustomerPaymentProfileExType')
         customer_type_enum = self.client.factory.create('CustomerTypeEnum')
         payment_profile.customerType = customer_type_enum.individual
         payment_simple_type = self.client.factory.create('PaymentType')
         card_simple_type = self.client.factory.create('CreditCardSimpleType')
-        number = kwargs['payment'].payment.creditCard.cardNumber
-        date = kwargs['payment'].payment.creditCard.expirationDate
+        number = base_profile.payment.creditCard.cardNumber
+        date = base_profile.payment.creditCard.expirationDate
         card_simple_type.cardNumber = number
         if kwargs['exp_month'] and kwargs['exp_year']:
             exp = CreditCard.exp_time(kwargs['exp_month'], kwargs['exp_year'])

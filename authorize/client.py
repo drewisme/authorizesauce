@@ -24,14 +24,6 @@ from authorize.apis.transaction import TransactionAPI
 
 _ga = object.__getattribute__
 
-
-def _ha(obj, name):
-    try:
-        _ga(obj, name)
-        return True
-    except AttributeError:
-        return False
-
 class AuthorizeClient(object):
     """
     Instantiate the client with your login ID and transaction key from
@@ -93,6 +85,7 @@ class AuthorizeClient(object):
         instance you can then use to udpate or cancel the payments.
         """
         return AuthorizeRecurring(self, uid)
+
 
 class AuthorizeCreditCard(object):
     """
@@ -198,6 +191,7 @@ class AuthorizeCreditCard(object):
             trial_occurrences=trial_occurrences)
         return self._client.recurring(uid)
 
+
 class AuthorizeTransaction(object):
     """
     This is the interface for working with a previous transaction. It is
@@ -287,50 +281,22 @@ class AuthorizeSavedCard(object):
     The first three operations will all return a transaction instance to work
     with.
 
-    You can also retrieve payment information. The properties ``first_name`` and
-    ``last_name`` can be used to get the name on the card, and the ``address``
-    property will get an  :class:`Address <authorize.data.Address>`
-    instance containing the address information on the card.
+    You can also retrieve payment information with the
+    :meth:`AuthorizeSavedCard.get_payment_info <authorize.client.AuthorizeSavedCard.get_payment_info`
+    method.
 
     You can update this information by setting it and running the
-    :meth:`AuthorizeCreditCard.update <authorize.client.AuthorizeCreditCard.update>`
-    method. For example:
+    :meth:`AuthorizeSavedCard.update <authorize.client.AuthorizeSavedCard.update>`
+    method.
     """
-
-    _lazy_props = [
-        'first_name', 'last_name', 'address', 'email', 'payment']
-
-    _masked_props = [
-        'exp_year', 'exp_month']
 
     def __init__(self, client, uid):
         self._client = client
         self.uid = uid
-        self.pulled = False
         self._profile_id, self._payment_id = uid.split('|')
-
-    def __getattr__(self, item):
-        if item in _ga(self, '_lazy_props'):
-            item = '_' + item
-            if not _ga(self, 'pulled'):
-                _ga(self, 'get_profile')()
-        if item in _ga(self, '_masked_props'):
-            if not _ha(self, item):
-                raise AttributeError("This field is masked by authorize.net."
-                                     " It cannot be retrieved.")
-        return _ga(self, item)
 
     def __repr__(self):
         return '<AuthorizeSavedCard {0.uid}>'.format(self)
-
-    def get_profile(self):
-        results = self._client._customer.retrieve_saved_payment(
-            self._profile_id, self._payment_id)
-        for name, value in results.items():
-            name = '_' + name
-            if not _ha(self, name):
-                setattr(self, name, value)
-        self.pulled = True
 
     def auth(self, amount):
         """
@@ -368,7 +334,7 @@ class AuthorizeSavedCard(object):
         ``first_name`` *(optional)*
             The first name on the card.
 
-        ``start`` *(optional)*
+        ``last_name`` *(optional)*
             The last name on the card
 
         ``address`` *(optional)*
@@ -393,22 +359,30 @@ class AuthorizeSavedCard(object):
 
             An integer representing the year of the card's expiration date.
         """
-        settings = {
-            prop: getattr(self, prop) for prop in self._lazy_props}
-        masked_settings = {
-            prop: getattr(self, prop, None) for prop in self._masked_props}
-        settings.update(masked_settings)
-        settings.update(kwargs)
+        settings = {'exp_month': None, 'exp_year': None}
+        old_settings = self.get_payment_info()
+        settings.update(old_settings)
+        settings.update(**kwargs)
         self._client._customer.update_saved_payment(
-            self._profile_id, self._payment_id, **settings)
+            self._profile_id, self._payment_id, self._base_profile, **settings)
 
-        # Make sure the local variables are updated with the new information.
-        for setting, value in settings.items():
-            if setting in self._lazy_props:
-                setattr(self, setting, value)
-            elif setting in self._masked_props:
-                if value:
-                    setattr(self, setting, value)
+    def get_payment_info(self):
+        """
+        Retrieves information about a card. It will return a dictionary
+        containing the ``first_name`` and ``last_name`` on the card, as well
+        as an ``address`` (a :class:`Address <authorize.data.Address>`
+        instance), and the user's ``email``. These can be used, for instance,
+        to populate a form which the user can fill to update their payment
+        information.
+
+        Note that the expiration date fields are masked by Authorize.net, and
+        so are not returned by this function. Neither is the card number
+        itself.
+        """
+        result = self._client._customer.retrieve_saved_payment(
+            self._profile_id, self._payment_id)
+        self._base_profile = result.pop('payment')
+        return result
 
     def delete(self):
         """
@@ -416,7 +390,6 @@ class AuthorizeSavedCard(object):
         """
         self._client._customer.delete_saved_payment(
             self._profile_id, self._payment_id)
-
 
 
 class AuthorizeRecurring(object):
