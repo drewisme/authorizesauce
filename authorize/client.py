@@ -55,6 +55,7 @@ class AuthorizeClient(object):
         will return an
         :class:`AuthorizeCreditCard <authorize.client.AuthorizeCreditCard>`
         instance you can then use to execute transactions.
+        ``email`` is only required for those using European payment processors.
         """
         return AuthorizeCreditCard(self, credit_card, address=address,
                                    email=email)
@@ -331,6 +332,10 @@ class AuthorizeSavedCard(object):
         address associated with the card, or the name, or the user's email
         address. You may even update the expiration date.
 
+        ``number`` *(optional)*
+            An updated number for the card. In most cases, you should create a
+            new card instead of using this.
+
         ``first_name`` *(optional)*
             The first name on the card.
 
@@ -364,7 +369,7 @@ class AuthorizeSavedCard(object):
         settings.update(old_settings)
         settings.update(**kwargs)
         self._client._customer.update_saved_payment(
-            self._profile_id, self._payment_id, self._base_profile, **settings)
+            self._profile_id, self._payment_id, **settings)
 
     def get_payment_info(self):
         """
@@ -379,10 +384,8 @@ class AuthorizeSavedCard(object):
         so are not returned by this function. Neither is the card number
         itself.
         """
-        result = self._client._customer.retrieve_saved_payment(
+        return self._client._customer.retrieve_saved_payment(
             self._profile_id, self._payment_id)
-        self._base_profile = result.pop('payment')
-        return result
 
     def delete(self):
         """

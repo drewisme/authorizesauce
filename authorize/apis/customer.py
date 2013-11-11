@@ -1,4 +1,5 @@
 from decimal import Decimal
+from pprint import pprint
 import urllib
 from datetime import datetime
 
@@ -139,7 +140,7 @@ class CustomerAPI(object):
         payment_info = {}
         email = None
         if hasattr(profile, 'email'):
-            email = profile.email
+            email = str(profile.email)
         payment_info['email'] = email
         saved_payment = None
         for _, payment in profile.paymentProfiles:
@@ -149,29 +150,30 @@ class CustomerAPI(object):
                 break
         if not saved_payment:
             raise AuthorizeError("Payment ID does not exist for this profile.")
-        payment_info['payment'] = saved_payment
+        payment_info['number'] = str(
+            saved_payment.payment.creditCard.cardNumber)
         data = saved_payment.billTo
-        payment_info['first_name'] = getattr(data, 'firstName', '')
-        payment_info['last_name'] = getattr(data, 'lastName', '')
+        payment_info['first_name'] = str(getattr(data, 'firstName', ''))
+        payment_info['last_name'] = str(getattr(data, 'lastName', ''))
         kwargs = {
             'street': getattr(data, 'address', None),
             'city': getattr(data, 'city', None),
             'state': getattr(data, 'state', None),
             'zip_code': getattr(data, 'zip', None),
             'country': getattr(data, 'country', None)}
+        kwargs = {key: str(value) for key, value in kwargs.items() if value}
         payment_info['address'] = Address(**kwargs)
         return payment_info
 
-    def update_saved_payment(self, profile_id, payment_id, base_profile,
-                             **kwargs):
+    def update_saved_payment(self, profile_id, payment_id, **kwargs):
         payment_profile = self.client.factory.create(
             'CustomerPaymentProfileExType')
         customer_type_enum = self.client.factory.create('CustomerTypeEnum')
         payment_profile.customerType = customer_type_enum.individual
         payment_simple_type = self.client.factory.create('PaymentType')
         card_simple_type = self.client.factory.create('CreditCardSimpleType')
-        number = base_profile.payment.creditCard.cardNumber
-        date = base_profile.payment.creditCard.expirationDate
+        number = kwargs['number']
+        date = 'XXXX'
         card_simple_type.cardNumber = number
         if kwargs['exp_month'] and kwargs['exp_year']:
             exp = CreditCard.exp_time(kwargs['exp_month'], kwargs['exp_year'])

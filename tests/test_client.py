@@ -199,7 +199,6 @@ class ClientTests(TestCase):
         self.assertEqual(result['last_name'], result_dict['last_name'])
         self.assertEqual(
             result['address'].street, result_dict['address'].street)
-        self.assertNotIn('payment', result)
 
     def test_authorized_saved_card_update(self):
         address = Address('45 Rose Ave', 'Venice', 'CA', '90291')
@@ -210,7 +209,6 @@ class ClientTests(TestCase):
         self.client._customer.update_saved_payment.return_value = None
         saved = AuthorizeSavedCard(self.client, '1|2')
         saved.update(address=address)
-        self.assertEqual(saved._base_profile, PROFILE)
 
     def test_authorize_saved_card_delete(self):
         saved = AuthorizeSavedCard(self.client, '1|2')

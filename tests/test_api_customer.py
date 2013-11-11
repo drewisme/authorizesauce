@@ -238,7 +238,7 @@ class CustomerAPITests(TestCase):
         self.assertEqual(payment['address'].city, address.city)
         self.assertEqual(payment['address'].state, address.state)
         self.assertEqual(payment['address'].zip_code, address.zip_code)
-        self.assertEqual(payment['payment'], PROFILE)
+        self.assertEqual(payment['number'], 'XXXX1111')
         self.assertEqual(payment['email'], 'example@example.com')
 
     def test_update_saved_payment(self):
@@ -252,9 +252,9 @@ class CustomerAPITests(TestCase):
         kwargs = {
             'first_name': 'Jeff', 'last_name': 'Schenck', 'address': address,
             'email': 'example@example.com', 'exp_month': '10',
-            'exp_year': int(date.today().year + 10)}
+            'exp_year': int(date.today().year + 10), 'number': 'XXXX1111'}
         self.api.update_saved_payment(
-            '123456', '123458', PROFILE, **kwargs)
+            '123456', '123458', **kwargs)
 
         self.assertEqual(service_payment.call_args[0][1], '123456')
         profile_request = service_payment.call_args[0][2]
