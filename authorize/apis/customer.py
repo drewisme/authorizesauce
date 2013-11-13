@@ -142,8 +142,7 @@ class CustomerAPI(object):
             email = str(profile.email)
         payment_info['email'] = email
         saved_payment = None
-        for _, payment in profile.paymentProfiles:
-            payment = payment[0]
+        for payment in profile.paymentProfiles[0]:
             if payment.customerPaymentProfileId == payment_id:
                 saved_payment = payment
                 break

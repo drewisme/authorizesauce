@@ -77,7 +77,7 @@ PROFILE = AttrDict({
 PROFILES_WRAPPER = AttrDict({
     'customerProfileId': '123456',
     'email': 'example@example.com',
-    'paymentProfiles': [(None, [PROFILE])]
+    'paymentProfiles': [[PROFILE]]
 })
 
 PROFILE_RESPONSE = AttrDict({
