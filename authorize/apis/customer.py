@@ -171,6 +171,8 @@ class CustomerAPI(object):
         payment_simple_type = self.client.factory.create('PaymentType')
         card_simple_type = self.client.factory.create('CreditCardSimpleType')
         number = kwargs['number']
+        # Authorize.net uses this constant to indicate that we want to keep
+        # the existing expiration date.
         date = 'XXXX'
         card_simple_type.cardNumber = number
         if kwargs['exp_month'] and kwargs['exp_year']:
