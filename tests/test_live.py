@@ -50,6 +50,23 @@ class AuthorizeLiveTests(TestCase):
         saved_from_id = self.client.saved_card(saved.uid)
         saved_from_id.delete()
 
+    def test_get_saved_card_info(self):
+        card = self.client.card(self.credit_card, self.address)
+        saved = card.save()
+        results = saved.get_payment_info()
+        self.assertEqual(results['address'].street, self.address.street)
+        self.assertEqual(results['first_name'], self.credit_card.first_name)
+        saved.delete()
+
+    def test_update_card_info(self):
+        card = self.client.card(self.credit_card, self.address)
+        saved = card.save()
+        saved.update(first_name='NotJeff')
+        info = saved.get_payment_info()
+        self.assertEqual(info['first_name'], 'NotJeff')
+        self.assertEqual(info['last_name'], 'Schenck')
+        saved.delete()
+
     def test_recurring(self):
         card = self.client.card(self.credit_card, self.address)
         start = date.today() + timedelta(days=7)

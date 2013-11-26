@@ -56,6 +56,7 @@ class CreditCardTests(TestCase):
         credit_card = CreditCard('4111111111111111', self.YEAR, 1, '911')
         self.assertEqual(credit_card.safe_number, '************1111')
 
+
 class AddressTests(TestCase):
     def test_basic_address(self):
         address = Address('45 Rose Ave', 'Venice', 'CA', '90291')

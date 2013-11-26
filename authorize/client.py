@@ -16,13 +16,11 @@ Authorize.net_.
 .. _Authorize.net: http://developer.authorize.net/
 
 """
-
 from uuid import uuid4
 
 from authorize.apis.customer import CustomerAPI
 from authorize.apis.recurring import RecurringAPI
 from authorize.apis.transaction import TransactionAPI
-
 
 class AuthorizeClient(object):
     """
@@ -47,7 +45,7 @@ class AuthorizeClient(object):
         self._recurring = RecurringAPI(login_id, transaction_key, debug, test)
         self._customer = CustomerAPI(login_id, transaction_key, debug, test)
 
-    def card(self, credit_card, address=None):
+    def card(self, credit_card, address=None, email=None):
         """
         To work with a credit card, pass in a
         :class:`CreditCard <authorize.data.CreditCard>` instance, and
@@ -55,8 +53,10 @@ class AuthorizeClient(object):
         will return an
         :class:`AuthorizeCreditCard <authorize.client.AuthorizeCreditCard>`
         instance you can then use to execute transactions.
+        ``email`` is only required for those using European payment processors.
         """
-        return AuthorizeCreditCard(self, credit_card, address=address)
+        return AuthorizeCreditCard(self, credit_card, address=address,
+                                   email=email)
 
     def transaction(self, uid):
         """
@@ -85,6 +85,7 @@ class AuthorizeClient(object):
         """
         return AuthorizeRecurring(self, uid)
 
+
 class AuthorizeCreditCard(object):
     """
     This is the interface for working with a credit card. You use this to
@@ -94,10 +95,11 @@ class AuthorizeCreditCard(object):
     Any operation performed on this instance returns another instance you can
     work with, such as a transaction, saved card, or recurring payment.
     """
-    def __init__(self, client, credit_card, address=None):
+    def __init__(self, client, credit_card, address=None, email=None):
         self._client = client
         self.credit_card = credit_card
         self.address = address
+        self.email = email
 
     def __repr__(self):
         return '<AuthorizeCreditCard {0.credit_card.card_type} ' \
@@ -141,7 +143,7 @@ class AuthorizeCreditCard(object):
         payment = self._client._customer.create_saved_payment(
             self.credit_card, address=self.address)
         profile_id, payment_ids = self._client._customer \
-            .create_saved_profile(unique_id, [payment])
+            .create_saved_profile(unique_id, [payment], email=self.email)
         uid = '{0}|{1}'.format(profile_id, payment_ids[0])
         return self._client.saved_card(uid)
 
@@ -187,6 +189,7 @@ class AuthorizeCreditCard(object):
             occurrences=occurrences, trial_amount=trial_amount,
             trial_occurrences=trial_occurrences)
         return self._client.recurring(uid)
+
 
 class AuthorizeTransaction(object):
     """
@@ -264,6 +267,7 @@ class AuthorizeTransaction(object):
         transaction.full_response = response
         return transaction
 
+
 class AuthorizeSavedCard(object):
     """
     This is the interface for working with a saved credit card. It is returned
@@ -275,7 +279,16 @@ class AuthorizeSavedCard(object):
     and credits. Or you can delete this card from the Authorize.net database.
     The first three operations will all return a transaction instance to work
     with.
+
+    You can also retrieve payment information with the
+    :meth:`AuthorizeSavedCard.get_payment_info <authorize.client.AuthorizeSavedCard.get_payment_info`
+    method.
+
+    You can update this information by setting it and running the
+    :meth:`AuthorizeSavedCard.update <authorize.client.AuthorizeSavedCard.update>`
+    method.
     """
+
     def __init__(self, client, uid):
         self._client = client
         self.uid = uid
@@ -311,12 +324,74 @@ class AuthorizeSavedCard(object):
         transaction.full_response = response
         return transaction
 
+    def update(self, **kwargs):
+        """
+        Updates information about a saved card. You can use this to change the
+        address associated with the card, or the name, or the user's email
+        address. You may even update the expiration date.
+
+        ``number`` *(optional)*
+            An updated number for the card. In most cases, you should create a
+            new card instead of using this.
+
+        ``first_name`` *(optional)*
+            The first name on the card.
+
+        ``last_name`` *(optional)*
+            The last name on the card
+
+        ``address`` *(optional)*
+            An :class:`Address <authorize.data.Address>` object that holds new
+            billing address information for the card.
+
+        ``email`` *(optional)*
+            Updates the email associated with the card. Note that emails are
+            actually stored on the customer profile. If you have multiple cards
+            (payments) with the same profile, this will update the email for
+            all of them.
+
+        ``exp_month`` *(conditional)*
+            If this option is specified, ``exp_year`` must also be specified,
+            or it will be ignored.
+
+            An integer representing the month of the card's expiration date.
+
+        ``exp_year`` *(conditional)*
+            If this option is specified, ``exp_month`` must also be specified,
+            or it will be ignored.
+
+            An integer representing the year of the card's expiration date.
+        """
+        settings = {'exp_month': None, 'exp_year': None}
+        old_settings = self.get_payment_info()
+        settings.update(old_settings)
+        settings.update(**kwargs)
+        self._client._customer.update_saved_payment(
+            self._profile_id, self._payment_id, **settings)
+
+    def get_payment_info(self):
+        """
+        Retrieves information about a card. It will return a dictionary
+        containing the ``first_name`` and ``last_name`` on the card, as well
+        as an ``address`` (a :class:`Address <authorize.data.Address>`
+        instance), and the user's ``email``. These can be used, for instance,
+        to populate a form which the user can fill to update their payment
+        information.
+
+        Note that the expiration date fields are masked by Authorize.net, and
+        so are not returned by this function. Neither is the card number
+        itself.
+        """
+        return self._client._customer.retrieve_saved_payment(
+            self._profile_id, self._payment_id)
+
     def delete(self):
         """
         Removes this saved card from the Authorize.net database.
         """
         self._client._customer.delete_saved_payment(
             self._profile_id, self._payment_id)
+
 
 class AuthorizeRecurring(object):
     """

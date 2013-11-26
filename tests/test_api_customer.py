@@ -21,6 +21,17 @@ RESPONSE = (
     ';auth_only;;Jeffrey;Schenck;;45 Rose Ave;Venice;CA;90291;USA;;;;;;;;;;;;'
     ';;;;;375DD9293D7605E20DF0B437EE2A7B92;P;2;;;;;;;;;;;XXXX1111;Visa;;;;;;;'
     ';;;;;;;;;;Y')
+
+BILL_TO = AttrDict({
+    'firstName': 'Jeff',
+    'lastName': 'Schenck',
+    'address': '45 Rose Ave',
+    'city': 'Venice',
+    'state': 'CA',
+    'zip': '90291',
+    'country': 'US',
+})
+
 PARSED_RESPONSE = {
     'cvv_response': 'P',
     'authorization_code': 'IKRAGJ',
@@ -32,6 +43,7 @@ PARSED_RESPONSE = {
     'response_reason_text': 'This transaction has been approved.',
     'transaction_id': '2171062816',
 }
+
 SUCCESS = AttrDict({
     'resultCode': 'Ok',
     'customerProfileId': '123456',
@@ -39,6 +51,7 @@ SUCCESS = AttrDict({
     'customerPaymentProfileId': '123458',
     'directResponse': RESPONSE,
 })
+
 ERROR = AttrDict({
     'resultCode': 'Error',
     'messages': [[AttrDict({
@@ -46,6 +59,32 @@ ERROR = AttrDict({
         'text': 'The field type is invalid.',
     })]],
 })
+
+PAYMENT = AttrDict({
+    'creditCard': AttrDict({
+        'cardNumber': 'XXXX1111',
+        'expirationDate': 'XXXX',
+    })
+})
+
+PROFILE = AttrDict({
+    'payment': PAYMENT,
+    'customerType': 'individual',
+    'billTo': BILL_TO,
+    'customerPaymentProfileId': 123458,
+})
+
+PROFILES_WRAPPER = AttrDict({
+    'customerProfileId': '123456',
+    'email': 'example@example.com',
+    'paymentProfiles': [[PROFILE]]
+})
+
+PROFILE_RESPONSE = AttrDict({
+    'resultCode': 'Ok',
+    'profile': PROFILES_WRAPPER
+})
+
 
 class CustomerAPITests(TestCase):
     def setUp(self):
@@ -106,9 +145,11 @@ class CustomerAPITests(TestCase):
     def test_create_saved_profile(self):
         service = self.api.client.service.CreateCustomerProfile
         service.return_value = SUCCESS
+        email = 'example@example.com'
 
         # Without payments
-        profile_id, payment_ids = self.api.create_saved_profile(123)
+        profile_id, payment_ids = self.api.create_saved_profile(
+            123, email=email)
         profile = service.call_args[0][1]
         self.assertEqual(profile._kind, 'CustomerProfileType')
         self.assertEqual(profile.merchantCustomerId, 123)
@@ -116,6 +157,7 @@ class CustomerAPITests(TestCase):
             'ArrayOfCustomerPaymentProfileType')
         self.assertEqual(profile_id, '123456')
         self.assertEqual(payment_ids, None)
+        self.assertEqual(profile.email, email)
 
         # With payments
         payment = mock.Mock()
@@ -181,6 +223,59 @@ class CustomerAPITests(TestCase):
         self.assertNotEqual(payment_profile.billTo.state, 'CA')
         self.assertNotEqual(payment_profile.billTo.zip, '90291')
         self.assertNotEqual(payment_profile.billTo.country, 'US')
+
+    def test_retrieve_saved_payment(self):
+        service = self.api.client.service.GetCustomerProfile
+        service.return_value = PROFILE_RESPONSE
+
+        address = Address(street='45 Rose Ave', city='Venice', state='CA',
+                          zip_code='90291', country='USA')
+
+        payment = self.api.retrieve_saved_payment('123456', '123458')
+        self.assertEqual(payment['first_name'], 'Jeff')
+        self.assertEqual(payment['last_name'], 'Schenck')
+        self.assertEqual(payment['address'].street, address.street)
+        self.assertEqual(payment['address'].city, address.city)
+        self.assertEqual(payment['address'].state, address.state)
+        self.assertEqual(payment['address'].zip_code, address.zip_code)
+        self.assertEqual(payment['number'], 'XXXX1111')
+        self.assertEqual(payment['email'], 'example@example.com')
+
+    def test_update_saved_payment(self):
+        service_payment = self.api.client.service.UpdateCustomerPaymentProfile
+        service_payment.return_value = SUCCESS
+        service_customer = self.api.client.service.UpdateCustomerProfile
+        service_customer.return_value = SUCCESS
+
+        address = Address(street='45 Rose Ave', city='Venice', state='CA',
+                          zip_code='90291', country='US')
+        kwargs = {
+            'first_name': 'Jeff', 'last_name': 'Schenck', 'address': address,
+            'email': 'example@example.com', 'exp_month': '10',
+            'exp_year': int(date.today().year + 10), 'number': 'XXXX1111'}
+        self.api.update_saved_payment(
+            '123456', '123458', **kwargs)
+
+        self.assertEqual(service_payment.call_args[0][1], '123456')
+        profile_request = service_payment.call_args[0][2]
+        self.assertEqual(profile_request.customerPaymentProfileId, '123458')
+        self.assertEqual(
+            profile_request.billTo.firstName, kwargs['first_name'])
+        self.assertEqual(
+            profile_request.billTo.lastName, kwargs['last_name'])
+        self.assertEqual(profile_request.billTo.address, address.street)
+        self.assertEqual(profile_request.billTo.state, address.state)
+        self.assertEqual(profile_request.billTo.zip, address.zip_code)
+        self.assertEqual(
+            profile_request.payment.creditCard.cardNumber, 'XXXX1111')
+        exp_date = '{0}-{1:0>2}'.format(
+            kwargs['exp_year'], kwargs['exp_month'])
+        self.assertEqual(
+            profile_request.payment.creditCard.expirationDate, exp_date)
+
+        customer_profile = service_customer.call_args[0][1]
+        self.assertEqual(customer_profile.customerProfileId, '123456')
+        self.assertEqual(customer_profile.email, kwargs['email'])
 
     def test_delete_saved_profile(self):
         service = self.api.client.service.DeleteCustomerProfile

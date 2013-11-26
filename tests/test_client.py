@@ -6,6 +6,7 @@ from unittest2 import TestCase
 from authorize import Address, AuthorizeClient, CreditCard
 from authorize.client import AuthorizeCreditCard, AuthorizeRecurring, \
     AuthorizeSavedCard, AuthorizeTransaction
+from test_api_customer import PROFILE
 
 
 TRANSACTION_RESULT = {
@@ -184,6 +185,30 @@ class ClientTests(TestCase):
             (('1', '2', 10), {}))
         self.assertTrue(isinstance(result, AuthorizeTransaction))
         self.assertEqual(result.uid, '2171062816')
+
+    def test_authorize_saved_card_get_payment_info(self):
+        address = Address('45 Rose Ave', 'Venice', 'CA', '90291')
+        result_dict = {
+            'first_name': 'Jeff', 'last_name': 'Shenck', 'address': address,
+            'payment': PROFILE}
+        self.client._customer.retrieve_saved_payment.return_value = result_dict
+        saved = AuthorizeSavedCard(self.client, '1|2')
+        result = saved.get_payment_info()
+
+        self.assertEqual(result['first_name'], result_dict['first_name'])
+        self.assertEqual(result['last_name'], result_dict['last_name'])
+        self.assertEqual(
+            result['address'].street, result_dict['address'].street)
+
+    def test_authorized_saved_card_update(self):
+        address = Address('45 Rose Ave', 'Venice', 'CA', '90291')
+        result_dict = {
+            'first_name': 'Jeff', 'last_name': 'Shenck', 'address': address,
+            'payment': PROFILE}
+        self.client._customer.retrieve_saved_payment.return_value = result_dict
+        self.client._customer.update_saved_payment.return_value = None
+        saved = AuthorizeSavedCard(self.client, '1|2')
+        saved.update(address=address)
 
     def test_authorize_saved_card_delete(self):
         saved = AuthorizeSavedCard(self.client, '1|2')
