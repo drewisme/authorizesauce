@@ -139,7 +139,7 @@ class CustomerAPI(object):
         payment_info = {}
         email = None
         if hasattr(profile, 'email'):
-            email = str(profile.email)
+            email = unicode(profile.email)
         payment_info['email'] = email
         saved_payment = None
         for payment in profile.paymentProfiles[0]:
@@ -148,18 +148,19 @@ class CustomerAPI(object):
                 break
         if not saved_payment:
             raise AuthorizeError("Payment ID does not exist for this profile.")
-        payment_info['number'] = str(
+        payment_info['number'] = unicode(
             saved_payment.payment.creditCard.cardNumber)
         data = saved_payment.billTo
-        payment_info['first_name'] = str(getattr(data, 'firstName', ''))
-        payment_info['last_name'] = str(getattr(data, 'lastName', ''))
+        payment_info['first_name'] = unicode(getattr(data, 'firstName', ''))
+        payment_info['last_name'] = unicode(getattr(data, 'lastName', ''))
         kwargs = {
             'street': getattr(data, 'address', None),
             'city': getattr(data, 'city', None),
             'state': getattr(data, 'state', None),
             'zip_code': getattr(data, 'zip', None),
             'country': getattr(data, 'country', None)}
-        kwargs = {key: str(value) for key, value in kwargs.items() if value}
+        kwargs = {
+            key: unicode(value) for key, value in kwargs.items() if value}
         payment_info['address'] = Address(**kwargs)
         return payment_info
 
