@@ -26,6 +26,23 @@ def parse_response(response):
         fields[name] = response[index]
     return fields
 
+def safe_unicode_to_str(string):
+    try:
+        return str(string)
+    except UnicodeEncodeError:
+        return string.encode('utf-8')
+
+def convert_params_to_byte_str(params):
+    converted_params = {}
+    for key,value in params.items():
+        if isinstance(key, unicode):
+            key = safe_unicode_to_str(key)
+        if isinstance(value, unicode):
+            value = safe_unicode_to_str(value)
+        converted_params[key] = value
+    return converted_params
+
+
 class TransactionAPI(object):
     def __init__(self, login_id, transaction_key, debug=True, test=False):
         self.url = TEST_URL if debug else PROD_URL
@@ -39,6 +56,7 @@ class TransactionAPI(object):
         }
 
     def _make_call(self, params):
+        params = convert_params_to_byte_str(params)
         params = urllib.urlencode(params)
         url = '{0}?{1}'.format(self.url, params)
         try:
