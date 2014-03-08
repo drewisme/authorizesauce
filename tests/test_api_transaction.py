@@ -6,7 +6,7 @@ from unittest2 import TestCase
 from urlparse import urlparse, parse_qsl
 from urllib import unquote_plus
 
-from authorize.apis.transaction import PROD_URL, TEST_URL, TransactionAPI, convert_params_to_byte_str
+from authorize.apis.transaction import PROD_URL, TEST_URL, TransactionAPI
 from authorize.data import Address, CreditCard
 from authorize.exceptions import AuthorizeConnectionError, \
     AuthorizeResponseError
