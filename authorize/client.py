@@ -114,7 +114,7 @@ class AuthorizeCreditCard(object):
         instance representing the transaction.
         """
         response = self._client._transaction.auth(
-            amount, self.credit_card, self.address)
+            amount, self.credit_card, self.address, self.email)
         transaction = self._client.transaction(response['transaction_id'])
         transaction.full_response = response
         return transaction
@@ -127,7 +127,7 @@ class AuthorizeCreditCard(object):
         instance representing the transaction.
         """
         response = self._client._transaction.capture(
-            amount, self.credit_card, self.address)
+            amount, self.credit_card, self.address, self.email)
         transaction = self._client.transaction(response['transaction_id'])
         transaction.full_response = response
         return transaction
