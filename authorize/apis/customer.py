@@ -215,11 +215,11 @@ class CustomerAPI(object):
             profile_id, payment_id)
 
     def auth(self, profile_id, payment_id, amount, cvv=None):
-        try:
-            if cvv is not None:
+        if cvv is not None:
+            try:
                 int(cvv)
-        except ValueError:
-            raise AuthorizeInvalidError("CVV Must be a number.")
+            except ValueError:
+                raise AuthorizeInvalidError("CVV Must be a number.")
         transaction = self.client.factory.create('ProfileTransactionType')
         auth = self.client.factory.create('ProfileTransAuthOnlyType')
         amount = Decimal(str(amount)).quantize(Decimal('0.01'))
@@ -233,11 +233,11 @@ class CustomerAPI(object):
         return parse_response(response.directResponse)
 
     def capture(self, profile_id, payment_id, amount, cvv=None):
-        try:
-            if cvv is not None:
+        if cvv is not None:
+            try:
                 int(cvv)
-        except ValueError:
-            raise AuthorizeInvalidError("CVV Must be a number.")
+            except ValueError:
+                raise AuthorizeInvalidError("CVV Must be a number.")
         transaction = self.client.factory.create('ProfileTransactionType')
         capture = self.client.factory.create('ProfileTransAuthCaptureType')
         amount = Decimal(str(amount)).quantize(Decimal('0.01'))
