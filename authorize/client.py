@@ -297,7 +297,7 @@ class AuthorizeSavedCard(object):
     def __repr__(self):
         return '<AuthorizeSavedCard {0.uid}>'.format(self)
 
-    def auth(self, amount):
+    def auth(self, amount, cvv=None):
         """
         Authorize a transaction against this card for the specified amount.
         This verifies the amount is available on the card and reserves it.
@@ -306,12 +306,12 @@ class AuthorizeSavedCard(object):
         instance representing the transaction.
         """
         response = self._client._customer.auth(
-            self._profile_id, self._payment_id, amount)
+            self._profile_id, self._payment_id, amount, cvv)
         transaction = self._client.transaction(response['transaction_id'])
         transaction.full_response = response
         return transaction
 
-    def capture(self, amount):
+    def capture(self, amount,  cvv=None):
         """
         Capture a transaction immediately on this card for the specified
         amount. Returns an
@@ -319,7 +319,7 @@ class AuthorizeSavedCard(object):
         instance representing the transaction.
         """
         response = self._client._customer.capture(
-            self._profile_id, self._payment_id, amount)
+            self._profile_id, self._payment_id, amount, cvv)
         transaction = self._client.transaction(response['transaction_id'])
         transaction.full_response = response
         return transaction

@@ -173,7 +173,7 @@ class ClientTests(TestCase):
         saved = AuthorizeSavedCard(self.client, '1|2')
         result = saved.auth(10)
         self.assertEqual(self.client._customer.auth.call_args,
-            (('1', '2', 10), {}))
+            (('1', '2', 10, None), {}))
         self.assertTrue(isinstance(result, AuthorizeTransaction))
         self.assertEqual(result.uid, '2171062816')
 
@@ -182,7 +182,7 @@ class ClientTests(TestCase):
         saved = AuthorizeSavedCard(self.client, '1|2')
         result = saved.capture(10)
         self.assertEqual(self.client._customer.capture.call_args,
-            (('1', '2', 10), {}))
+            (('1', '2', 10, None), {}))
         self.assertTrue(isinstance(result, AuthorizeTransaction))
         self.assertEqual(result.uid, '2171062816')
 

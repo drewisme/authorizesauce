@@ -214,25 +214,37 @@ class CustomerAPI(object):
         self._make_call('DeleteCustomerPaymentProfile',
             profile_id, payment_id)
 
-    def auth(self, profile_id, payment_id, amount):
+    def auth(self, profile_id, payment_id, amount, cvv=None):
+        if cvv is not None:
+            try:
+                int(cvv)
+            except ValueError:
+                raise AuthorizeInvalidError("CVV Must be a number.")
         transaction = self.client.factory.create('ProfileTransactionType')
         auth = self.client.factory.create('ProfileTransAuthOnlyType')
         amount = Decimal(str(amount)).quantize(Decimal('0.01'))
         auth.amount = str(amount)
         auth.customerProfileId = profile_id
         auth.customerPaymentProfileId = payment_id
+        auth.cardCode = cvv
         transaction.profileTransAuthOnly = auth
         response = self._make_call('CreateCustomerProfileTransaction',
             transaction, self.transaction_options)
         return parse_response(response.directResponse)
 
-    def capture(self, profile_id, payment_id, amount):
+    def capture(self, profile_id, payment_id, amount, cvv=None):
+        if cvv is not None:
+            try:
+                int(cvv)
+            except ValueError:
+                raise AuthorizeInvalidError("CVV Must be a number.")
         transaction = self.client.factory.create('ProfileTransactionType')
         capture = self.client.factory.create('ProfileTransAuthCaptureType')
         amount = Decimal(str(amount)).quantize(Decimal('0.01'))
         capture.amount = str(amount)
         capture.customerProfileId = profile_id
         capture.customerPaymentProfileId = payment_id
+        capture.cardCode = cvv
         transaction.profileTransAuthCapture = capture
         response = self._make_call('CreateCustomerProfileTransaction',
             transaction, self.transaction_options)
