@@ -1,6 +1,7 @@
 from decimal import Decimal
 import urllib
 from datetime import datetime
+from ssl import SSLError
 
 from suds import WebFault
 from suds.client import Client
@@ -46,7 +47,7 @@ class CustomerAPI(object):
         method = getattr(self.client.service, service)
         try:
             response = method(self.client_auth, *args)
-        except WebFault as e:
+        except (WebFault, SSLError) as e:
             raise AuthorizeConnectionError('Error contacting SOAP API.')
         if response.resultCode != 'Ok':
             error = response.messages[0][0]
