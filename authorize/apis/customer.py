@@ -1,5 +1,6 @@
 from decimal import Decimal
-import urllib
+from six import text_type
+from six.moves.urllib.parse import urlencode
 from datetime import datetime
 from ssl import SSLError
 
@@ -19,7 +20,7 @@ class CustomerAPI(object):
         self.url = TEST_URL if debug else PROD_URL
         self.login_id = login_id
         self.transaction_key = transaction_key
-        self.transaction_options = urllib.urlencode({
+        self.transaction_options = urlencode({
             'x_version': '3.1',
             'x_test_request': 'Y' if test else 'F',
             'x_delim_data': 'TRUE',
@@ -140,7 +141,7 @@ class CustomerAPI(object):
         payment_info = {}
         email = None
         if hasattr(profile, 'email'):
-            email = unicode(profile.email)
+            email = text_type(profile.email)
         payment_info['email'] = email
         saved_payment = None
         for payment in profile.paymentProfiles[0]:
@@ -149,11 +150,11 @@ class CustomerAPI(object):
                 break
         if not saved_payment:
             raise AuthorizeError("Payment ID does not exist for this profile.")
-        payment_info['number'] = unicode(
+        payment_info['number'] = text_type(
             saved_payment.payment.creditCard.cardNumber)
         data = saved_payment.billTo
-        payment_info['first_name'] = unicode(getattr(data, 'firstName', ''))
-        payment_info['last_name'] = unicode(getattr(data, 'lastName', ''))
+        payment_info['first_name'] = text_type(getattr(data, 'firstName', ''))
+        payment_info['last_name'] = text_type(getattr(data, 'lastName', ''))
         kwargs = {
             'street': getattr(data, 'address', None),
             'city': getattr(data, 'city', None),
@@ -161,7 +162,7 @@ class CustomerAPI(object):
             'zip_code': getattr(data, 'zip', None),
             'country': getattr(data, 'country', None)}
         kwargs = {
-            key: unicode(value) for key, value in kwargs.items() if value}
+            key: text_type(value) for key, value in kwargs.items() if value}
         payment_info['address'] = Address(**kwargs)
         return payment_info
 
