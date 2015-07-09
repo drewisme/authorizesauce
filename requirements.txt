@@ -1,4 +1,4 @@
 suds-jurko==0.6
 mock==0.8.0
-unittest2==0.5.1
+unittest2==1.1.0
 sphinx==1.1.3
