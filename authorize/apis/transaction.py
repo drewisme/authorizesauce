@@ -94,7 +94,7 @@ class TransactionAPI(object):
                 'x_zip': address.zip_code,
                 'x_country': address.country,
             })
-        for key, value in params.items():
+        for key, value in list(params.items()):
             if value is None:
                 del params[key]
         return params
