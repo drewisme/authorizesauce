@@ -10,4 +10,5 @@ if __name__ == '__main__':
     sys.path.append(authorize_dir)
     suite = TestLoader().discover(tests_dir)
     runner = TextTestRunner(verbosity=1)
-    runner.run(suite)
+    result = runner.run(suite)
+    sys.exit(not result.wasSuccessful())

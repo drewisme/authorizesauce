@@ -64,7 +64,7 @@ setup(
     license='MIT',
     install_requires=[
         'suds-jurko>=0.6',
-        'six',
+        'six>=1.9.0',
     ],
     packages=[
         'authorize',
