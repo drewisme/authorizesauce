@@ -11,9 +11,13 @@ from authorize.exceptions import AuthorizeConnectionError, \
     AuthorizeResponseError
 
 class MockResponse(BytesIO):
-    class Headers:
-        def get_content_charset(self):
+    class Headers(dict):
+        def getparam(self, *args, **kwargs):
+            """Python 2 version"""
             return None
+        def get_content_charset(self, failobj=None, *args, **kwargs):
+            """Python 3 version"""
+            return failobj
 
     def __init__(self, *args, **kwargs):
         BytesIO.__init__(self, *args, **kwargs)

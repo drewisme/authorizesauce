@@ -1,5 +1,5 @@
 from decimal import Decimal
-from six import text_type
+from six import PY2, text_type
 from six.moves.urllib.parse import urlencode
 from six.moves.urllib.request import urlopen
 
@@ -22,6 +22,16 @@ RESPONSE_FIELDS = {
 }
 
 DEFAULT_CHARSET = 'utf-8'
+
+def get_content_charset(resource):
+    """Gets the charset encoding used in the given urlopen response."""
+    if PY2:
+        # Python 2 doesn't support get_content_charset, provides getparam
+        # instead of get_param, and doesn't support the failobj option.
+        charset = resource.headers.getparam('charset')
+        return charset and charset.lower() or DEFAULT_CHARSET
+    else:
+        return resource.headers.get_content_charset(failobj=DEFAULT_CHARSET)
 
 def parse_response(response):
     response = response.split(';')
@@ -66,7 +76,7 @@ class TransactionAPI(object):
         try:
             resource = urlopen(url)
             response = resource.read().decode(
-                resource.headers.get_content_charset() or DEFAULT_CHARSET)
+                get_content_charset(resource) or DEFAULT_CHARSET)
         except IOError as e:
             raise AuthorizeConnectionError(e)
         fields = parse_response(response)
