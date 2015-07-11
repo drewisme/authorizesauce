@@ -1,4 +1,4 @@
-from six.moves import cStringIO as StringIO
+from six import BytesIO
 from datetime import date
 
 import mock
@@ -10,12 +10,20 @@ from authorize.data import Address, CreditCard
 from authorize.exceptions import AuthorizeConnectionError, \
     AuthorizeResponseError
 
+class MockResponse(BytesIO):
+    class Headers:
+        def get_content_charset(self):
+            return None
 
-SUCCESS = StringIO(
-    '1;1;1;This transaction has been approved.;IKRAGJ;Y;2171062816;;;20.00;CC'
-    ';auth_only;;Jeffrey;Schenck;;45 Rose Ave;Venice;CA;90291;USA;;;;;;;;;;;;'
-    ';;;;;375DD9293D7605E20DF0B437EE2A7B92;P;2;;;;;;;;;;;XXXX1111;Visa;;;;;;;'
-    ';;;;;;;;;;Y')
+    def __init__(self, *args, **kwargs):
+        BytesIO.__init__(self, *args, **kwargs)
+        self.headers = self.Headers()
+
+SUCCESS = MockResponse(
+    b'1;1;1;This transaction has been approved.;IKRAGJ;Y;2171062816;;;20.00;CC'
+    b';auth_only;;Jeffrey;Schenck;;45 Rose Ave;Venice;CA;90291;USA;;;;;;;;;;;;'
+    b';;;;;375DD9293D7605E20DF0B437EE2A7B92;P;2;;;;;;;;;;;XXXX1111;Visa;;;;;;;'
+    b';;;;;;;;;;Y')
 PARSED_SUCCESS = {
     'cvv_response': 'P',
     'authorization_code': 'IKRAGJ',
@@ -27,11 +35,11 @@ PARSED_SUCCESS = {
     'response_reason_text': 'This transaction has been approved.',
     'transaction_id': '2171062816',
 }
-ERROR = StringIO(
-    '2;1;2;This transaction has been declined.;000000;N;2171062816;;;20.00;CC'
-    ';auth_only;;Jeffrey;Schenck;;45 Rose Ave;Venice;CA;90291;USA;;;;;;;;;;;;'
-    ';;;;;375DD9293D7605E20DF0B437EE2A7B92;N;1;;;;;;;;;;;XXXX1111;Visa;;;;;;;'
-    ';;;;;;;;;;Y')
+ERROR = MockResponse(
+    b'2;1;2;This transaction has been declined.;000000;N;2171062816;;;20.00;CC'
+    b';auth_only;;Jeffrey;Schenck;;45 Rose Ave;Venice;CA;90291;USA;;;;;;;;;;;;'
+    b';;;;;375DD9293D7605E20DF0B437EE2A7B92;N;1;;;;;;;;;;;XXXX1111;Visa;;;;;;;'
+    b';;;;;;;;;;Y')
 PARSED_ERROR = {
     'cvv_response': 'N',
     'authorization_code': '000000',

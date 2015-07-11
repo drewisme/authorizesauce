@@ -21,6 +21,8 @@ RESPONSE_FIELDS = {
     38: 'cvv_response',
 }
 
+DEFAULT_CHARSET = 'utf-8'
+
 def parse_response(response):
     response = response.split(';')
     fields = {}
@@ -62,7 +64,9 @@ class TransactionAPI(object):
         params = urlencode(params)
         url = '{0}?{1}'.format(self.url, params)
         try:
-            response = urlopen(url).read()
+            resource = urlopen(url)
+            response = resource.read().decode(
+                resource.headers.get_content_charset() or DEFAULT_CHARSET)
         except IOError as e:
             raise AuthorizeConnectionError(e)
         fields = parse_response(response)
