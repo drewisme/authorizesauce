@@ -13,7 +13,7 @@ Credit card
 -----------
 
 .. autoclass:: authorize.client.AuthorizeCreditCard
-    :members: auth, capture, credit, save, recurring
+    :members: auth, capture, save, recurring
 
 Transaction
 -----------
@@ -25,7 +25,7 @@ Saved card
 ----------
 
 .. autoclass:: authorize.client.AuthorizeSavedCard
-    :members: auth, capture, credit, delete
+    :members: auth, capture, delete
 
 Recurring charge
 ----------------
