@@ -21,7 +21,7 @@ RESPONSE_FIELDS = {
     38: 'cvv_response',
 }
 
-DEFAULT_CHARSET = 'utf-8'
+DEFAULT_CHARSET = 'iso-8859-1'
 
 def get_content_charset(resource):
     """Gets the charset encoding used in the given urlopen response."""
