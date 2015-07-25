@@ -161,8 +161,8 @@ class CustomerAPI(object):
             'state': getattr(data, 'state', None),
             'zip_code': getattr(data, 'zip', None),
             'country': getattr(data, 'country', None)}
-        kwargs = {
-            key: text_type(value) for key, value in kwargs.items() if value}
+        kwargs = dict(
+            [(key, text_type(value)) for key, value in kwargs.items() if value])
         payment_info['address'] = Address(**kwargs)
         return payment_info
 
