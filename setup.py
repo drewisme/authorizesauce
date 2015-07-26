@@ -61,7 +61,7 @@ if os.path.abspath(__file__).split(os.path.sep)[1] == 'vagrant':
 
 setup(
     name='AuthorizeSauce',
-    version='0.3.3',
+    version='0.4.0',
     author='Jeff Schenck',
     author_email='jmschenck@gmail.com',
     url='http://authorize-sauce.readthedocs.org/',
