@@ -1,4 +1,4 @@
-from six import BytesIO
+from six import BytesIO, u
 from datetime import date
 
 import mock
@@ -100,7 +100,7 @@ class TransactionAPITests(TestCase):
     @mock.patch('authorize.apis.transaction.urlopen')
     def test_make_call_with_unicode(self, urlopen):
         urlopen.side_effect = self.success
-        result = self.api._make_call({u'\xe3': '1', 'b': u'\xe3'})
+        result = self.api._make_call({u('\xe3'): '1', 'b': u('\xe3')})
         self.assertEqual(URL(urlopen.call_args[0][0]),
             URL('{0}?%C3%A3=1&b=%C3%A3'.format(TEST_URL)))
         self.assertEqual(result, PARSED_SUCCESS)
