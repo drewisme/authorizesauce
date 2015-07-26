@@ -5,8 +5,10 @@ python:
   - "3.2"
   - "3.3"
   - "3.4"
-install: "pip install -r requirements.txt"
 env:
   global:
     - "AUTHORIZE_LIVE_TESTS=1"
+before_install: "pip install codecov"
+install: "pip install -r requirements.txt"
 script: "python tests/run_tests.py"
+after_success: codecov

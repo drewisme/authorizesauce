@@ -1,6 +1,7 @@
 *.py[co]
 .DS_Store
 .tox
+.coverage
 docs/_build/
 build/
 dist/
