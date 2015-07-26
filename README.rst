@@ -1,6 +1,9 @@
 Authorize Sauce
 ===============
 
+.. image:: https://travis-ci.org/jeffschenck/authorizesauce.svg?branch=master
+    :target: https://travis-ci.org/jeffschenck/authorizesauce
+
 The secret sauce for accessing the Authorize.net API. The Authorize APIs for
 transactions, recurring payments, and saved payments are all different and
 awkward to use directly. Instead, you can use Authorize Sauce, which unifies
