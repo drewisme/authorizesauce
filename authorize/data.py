@@ -49,10 +49,10 @@ class CreditCard(object):
         yourself.
         """
         try:
-            num = map(int, self.card_number)
+            num = [int(n) for n in self.card_number]
         except ValueError:
             raise AuthorizeInvalidError('Credit card number is not valid.')
-        if sum(num[::-2] + map(lambda d: sum(divmod(d * 2, 10)), num[-2::-2])) % 10:
+        if sum(num[::-2] + [sum(divmod(d * 2, 10)) for d in num[-2::-2]]) % 10:
             raise AuthorizeInvalidError('Credit card number is not valid.')
         if datetime.now() > self.expiration:
             raise AuthorizeInvalidError('Credit card is expired.')

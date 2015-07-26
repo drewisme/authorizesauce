@@ -1,5 +1,7 @@
 from decimal import Decimal
-import urllib
+from six import PY2, text_type
+from six.moves.urllib.parse import urlencode
+from six.moves.urllib.request import urlopen
 
 from authorize.exceptions import AuthorizeConnectionError, \
     AuthorizeResponseError
@@ -19,6 +21,18 @@ RESPONSE_FIELDS = {
     38: 'cvv_response',
 }
 
+DEFAULT_CHARSET = 'iso-8859-1'
+
+def get_content_charset(resource):
+    """Gets the charset encoding used in the given urlopen response."""
+    if PY2:
+        # Python 2 doesn't support get_content_charset, provides getparam
+        # instead of get_param, and doesn't support the failobj option.
+        charset = resource.headers.getparam('charset')
+        return charset and charset.lower() or DEFAULT_CHARSET
+    else:
+        return resource.headers.get_content_charset(failobj=DEFAULT_CHARSET)
+
 def parse_response(response):
     response = response.split(';')
     fields = {}
@@ -35,9 +49,9 @@ def safe_unicode_to_str(string):
 def convert_params_to_byte_str(params):
     converted_params = {}
     for key,value in params.items():
-        if isinstance(key, unicode):
+        if isinstance(key, text_type):
             key = safe_unicode_to_str(key)
-        if isinstance(value, unicode):
+        if isinstance(value, text_type):
             value = safe_unicode_to_str(value)
         converted_params[key] = value
     return converted_params
@@ -57,10 +71,12 @@ class TransactionAPI(object):
 
     def _make_call(self, params):
         params = convert_params_to_byte_str(params)
-        params = urllib.urlencode(params)
+        params = urlencode(params)
         url = '{0}?{1}'.format(self.url, params)
         try:
-            response = urllib.urlopen(url).read()
+            resource = urlopen(url)
+            response = resource.read().decode(
+                get_content_charset(resource) or DEFAULT_CHARSET)
         except IOError as e:
             raise AuthorizeConnectionError(e)
         fields = parse_response(response)
@@ -92,7 +108,7 @@ class TransactionAPI(object):
                 'x_zip': address.zip_code,
                 'x_country': address.country,
             })
-        for key, value in params.items():
+        for key, value in list(params.items()):
             if value is None:
                 del params[key]
         return params

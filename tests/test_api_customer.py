@@ -1,6 +1,7 @@
 from datetime import date
 
 import mock
+from six.moves.urllib.parse import parse_qs
 from suds import WebFault
 from ssl import SSLError
 from unittest2 import TestCase
@@ -310,7 +311,7 @@ class CustomerAPITests(TestCase):
             transaction.profileTransAuthOnly.customerProfileId, '1')
         self.assertEqual(
             transaction.profileTransAuthOnly.customerPaymentProfileId, '2')
-        self.assertEqual(options, OPTIONS)
+        self.assertEqual(parse_qs(options), parse_qs(OPTIONS))
         self.assertEqual(result, PARSED_RESPONSE)
 
     def test_capture(self):
@@ -326,5 +327,5 @@ class CustomerAPITests(TestCase):
             transaction.profileTransAuthCapture.customerProfileId, '1')
         self.assertEqual(
             transaction.profileTransAuthCapture.customerPaymentProfileId, '2')
-        self.assertEqual(options, OPTIONS)
+        self.assertEqual(parse_qs(options), parse_qs(OPTIONS))
         self.assertEqual(result, PARSED_RESPONSE)

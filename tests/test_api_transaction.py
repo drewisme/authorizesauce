@@ -1,22 +1,33 @@
-from cStringIO import StringIO
+from six import BytesIO, u
 from datetime import date
 
 import mock
 from unittest2 import TestCase
-from urlparse import urlparse, parse_qsl
-from urllib import unquote_plus
+from six.moves.urllib.parse import urlparse, parse_qsl, unquote_plus
 
 from authorize.apis.transaction import PROD_URL, TEST_URL, TransactionAPI
 from authorize.data import Address, CreditCard
 from authorize.exceptions import AuthorizeConnectionError, \
     AuthorizeResponseError
 
+class MockResponse(BytesIO):
+    class Headers(dict):
+        def getparam(self, *args, **kwargs):
+            """Python 2 version"""
+            return None
+        def get_content_charset(self, failobj=None, *args, **kwargs):
+            """Python 3 version"""
+            return failobj
 
-SUCCESS = StringIO(
-    '1;1;1;This transaction has been approved.;IKRAGJ;Y;2171062816;;;20.00;CC'
-    ';auth_only;;Jeffrey;Schenck;;45 Rose Ave;Venice;CA;90291;USA;;;;;;;;;;;;'
-    ';;;;;375DD9293D7605E20DF0B437EE2A7B92;P;2;;;;;;;;;;;XXXX1111;Visa;;;;;;;'
-    ';;;;;;;;;;Y')
+    def __init__(self, *args, **kwargs):
+        BytesIO.__init__(self, *args, **kwargs)
+        self.headers = self.Headers()
+
+SUCCESS = MockResponse(
+    b'1;1;1;This transaction has been approved.;IKRAGJ;Y;2171062816;;;20.00;CC'
+    b';auth_only;;Jeffrey;Schenck;;45 Rose Ave;Venice;CA;90291;USA;;;;;;;;;;;;'
+    b';;;;;375DD9293D7605E20DF0B437EE2A7B92;P;2;;;;;;;;;;;XXXX1111;Visa;;;;;;;'
+    b';;;;;;;;;;Y')
 PARSED_SUCCESS = {
     'cvv_response': 'P',
     'authorization_code': 'IKRAGJ',
@@ -28,11 +39,11 @@ PARSED_SUCCESS = {
     'response_reason_text': 'This transaction has been approved.',
     'transaction_id': '2171062816',
 }
-ERROR = StringIO(
-    '2;1;2;This transaction has been declined.;000000;N;2171062816;;;20.00;CC'
-    ';auth_only;;Jeffrey;Schenck;;45 Rose Ave;Venice;CA;90291;USA;;;;;;;;;;;;'
-    ';;;;;375DD9293D7605E20DF0B437EE2A7B92;N;1;;;;;;;;;;;XXXX1111;Visa;;;;;;;'
-    ';;;;;;;;;;Y')
+ERROR = MockResponse(
+    b'2;1;2;This transaction has been declined.;000000;N;2171062816;;;20.00;CC'
+    b';auth_only;;Jeffrey;Schenck;;45 Rose Ave;Venice;CA;90291;USA;;;;;;;;;;;;'
+    b';;;;;375DD9293D7605E20DF0B437EE2A7B92;N;1;;;;;;;;;;;XXXX1111;Visa;;;;;;;'
+    b';;;;;;;;;;Y')
 PARSED_ERROR = {
     'cvv_response': 'N',
     'authorization_code': '000000',
@@ -66,8 +77,8 @@ class URL(object):
 class TransactionAPITests(TestCase):
     def setUp(self):
         self.api = TransactionAPI('123', '456')
-        self.success = lambda *args, **kwargs: SUCCESS.reset() or SUCCESS
-        self.error = lambda *args, **kwargs: ERROR.reset() or ERROR
+        self.success = lambda *args, **kwargs: SUCCESS.seek(0) or SUCCESS
+        self.error = lambda *args, **kwargs: ERROR.seek(0) or ERROR
         self.year = date.today().year + 10
         self.credit_card = CreditCard('4111111111111111', self.year, 1, '911')
         self.address = Address('45 Rose Ave', 'Venice', 'CA', '90291')
@@ -78,7 +89,7 @@ class TransactionAPITests(TestCase):
         api = TransactionAPI('123', '456', debug=False)
         self.assertEqual(api.url, PROD_URL)
 
-    @mock.patch('authorize.apis.transaction.urllib.urlopen')
+    @mock.patch('authorize.apis.transaction.urlopen')
     def test_make_call(self, urlopen):
         urlopen.side_effect = self.success
         result = self.api._make_call({'a': '1', 'b': '2'})
@@ -86,21 +97,21 @@ class TransactionAPITests(TestCase):
             URL('{0}?a=1&b=2'.format(TEST_URL)))
         self.assertEqual(result, PARSED_SUCCESS)
 
-    @mock.patch('authorize.apis.transaction.urllib.urlopen')
+    @mock.patch('authorize.apis.transaction.urlopen')
     def test_make_call_with_unicode(self, urlopen):
         urlopen.side_effect = self.success
-        result = self.api._make_call({u'\xe3': '1', 'b': u'\xe3'})
+        result = self.api._make_call({u('\xe3'): '1', 'b': u('\xe3')})
         self.assertEqual(URL(urlopen.call_args[0][0]),
             URL('{0}?%C3%A3=1&b=%C3%A3'.format(TEST_URL)))
         self.assertEqual(result, PARSED_SUCCESS)
 
-    @mock.patch('authorize.apis.transaction.urllib.urlopen')
+    @mock.patch('authorize.apis.transaction.urlopen')
     def test_make_call_connection_error(self, urlopen):
         urlopen.side_effect = IOError('Borked')
         self.assertRaises(AuthorizeConnectionError, self.api._make_call,
             {'a': '1', 'b': '2'})
 
-    @mock.patch('authorize.apis.transaction.urllib.urlopen')
+    @mock.patch('authorize.apis.transaction.urlopen')
     def test_make_call_response_error(self, urlopen):
         urlopen.side_effect = self.error
         try:
@@ -138,7 +149,7 @@ class TransactionAPITests(TestCase):
             'x_country': 'US',
         })
 
-    @mock.patch('authorize.apis.transaction.urllib.urlopen')
+    @mock.patch('authorize.apis.transaction.urlopen')
     def test_auth(self, urlopen):
         urlopen.side_effect = self.success
         result = self.api.auth(20, self.credit_card, self.address)
@@ -151,7 +162,7 @@ class TransactionAPITests(TestCase):
             '&x_type=AUTH_ONLY&x_delim_data=TRUE'.format(str(self.year))))
         self.assertEqual(result, PARSED_SUCCESS)
 
-    @mock.patch('authorize.apis.transaction.urllib.urlopen')
+    @mock.patch('authorize.apis.transaction.urlopen')
     def test_capture(self, urlopen):
         urlopen.side_effect = self.success
         result = self.api.capture(20, self.credit_card, self.address)
@@ -164,7 +175,7 @@ class TransactionAPITests(TestCase):
             '&x_type=AUTH_CAPTURE&x_delim_data=TRUE'.format(str(self.year))))
         self.assertEqual(result, PARSED_SUCCESS)
 
-    @mock.patch('authorize.apis.transaction.urllib.urlopen')
+    @mock.patch('authorize.apis.transaction.urlopen')
     def test_settle(self, urlopen):
         urlopen.side_effect = self.success
 
@@ -186,7 +197,7 @@ class TransactionAPITests(TestCase):
             '&x_tran_key=456&x_test_request=FALSE'))
         self.assertEqual(result, PARSED_SUCCESS)
 
-    @mock.patch('authorize.apis.transaction.urllib.urlopen')
+    @mock.patch('authorize.apis.transaction.urlopen')
     def test_credit(self, urlopen):
         urlopen.side_effect = self.success
 
@@ -199,7 +210,7 @@ class TransactionAPITests(TestCase):
             '&x_test_request=FALSE'))
         self.assertEqual(result, PARSED_SUCCESS)
 
-    @mock.patch('authorize.apis.transaction.urllib.urlopen')
+    @mock.patch('authorize.apis.transaction.urlopen')
     def test_void(self, urlopen):
         urlopen.side_effect = self.success
         result = self.api.void('123456')

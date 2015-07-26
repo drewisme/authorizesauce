@@ -26,11 +26,13 @@ Download or clone the source from Github and run setup.py install
 Requirements
 ------------
 
-Authorize Sauce has one external dependency:
+Authorize Sauce has two external dependencies:
 
-* suds_
+* six_
+* suds-jurko_
 
 If you want to build the docs or run the tests, there are additional
 dependencies, which are covered in the :doc:`development` section.
 
-.. _suds: https://fedorahosted.org/suds/
+.. _six: http://pythonhosted.org/six/
+.. _suds-jurko: https://bitbucket.org/jurko/suds

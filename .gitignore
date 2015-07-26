@@ -1,5 +1,6 @@
 *.py[co]
 .DS_Store
+.tox
 docs/_build/
 build/
 dist/

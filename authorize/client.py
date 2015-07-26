@@ -9,7 +9,7 @@ Authorize.net_.
     To use the saved card and recurring billing functionality, you must have
     either or both set up in your Authorize.net account. You must sign up your
     account for the CIM (Customer Information Manager) service and/or the ARB
-    (Automated Recurring Billing) service, each of which is an additional
+    (Automated Recurring Billing) service, each of which may be an additional
     monthly charge. See the :ref:`authorize-net-documentation` for additional
     information.
 

@@ -48,6 +48,47 @@ environment variable:
 
     AUTHORIZE_LIVE_TESTS=1 ./tests/run_tests.py
 
+Testing in all supported Python versions
+----------------------------------------
+
+Since Authorize Sauce supports multiple Python versions, running the tests in
+your currently installed Python version may not be enough. You can use `tox`_
+to automate running the tests in all supported versions of Python.
+
+First, install tox, if you haven't already:
+
+.. code-block:: bash
+
+    pip install tox
+    # or easy_install tox
+
+Running it is simple:
+
+.. code-block:: bash
+
+    tox
+
+If you want to only test against a subset of Python versions, you can do so:
+
+.. code-block:: bash
+
+    tox -e py27,py34
+
+As above, you can set an environment variable to run the full test suite in
+every supported Python version:
+
+.. code-block:: bash
+
+    AUTHORIZE_LIVE_TESTS=1 tox
+
+**Note**: tox requires that the tested Python versions are already present on
+your system.  If you need to install one or more versions of Python, `pyenv`_
+or (for Ubuntu) the `deadsnakes PPA`_ can be helpful.
+
+.. _tox: https://tox.readthedocs.org/en/latest/
+.. _pyenv: https://github.com/yyuu/pyenv
+.. _deadsnakes PPA: https://launchpad.net/~fkrull/+archive/ubuntu/deadsnakes
+
 .. _authorize-net-documentation:
 
 Authorize.net documentation
