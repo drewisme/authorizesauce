@@ -49,8 +49,15 @@ Authorize Sauce is released under the `MIT License`_.
 .. _MIT License: http://www.opensource.org/licenses/mit-license
 """
 
+import os
 from setuptools import setup
 
+
+# Hard links don't work inside VirtualBox shared folders. In order to allow
+# setup.py sdist to work in such an environment, this quick and dirty hack is
+# used. See http://stackoverflow.com/a/22147112.
+if os.path.abspath(__file__).split(os.path.sep)[1] == 'vagrant':
+    del os.link
 
 setup(
     name='AuthorizeSauce',
