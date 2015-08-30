@@ -56,7 +56,7 @@ class CreditCard(object):
             raise AuthorizeInvalidError('Credit card number is not valid.')
         if datetime.now() > self.expiration:
             raise AuthorizeInvalidError('Credit card is expired.')
-        if not re.match(r'^[\d+]{3,4}$', self.cvv):
+        if not re.match(r'^\d{3,4}$', self.cvv):
             raise AuthorizeInvalidError('Credit card CVV is invalid format.')
         if not self.card_type:
             raise AuthorizeInvalidError('Credit card number is not valid.')
