@@ -1,21 +1,10 @@
-Seeking New Project Maintainer
-==============================
-
-I no longer use Authorize.net for payment processing, no longer use 
-authorizesauce, and do not have the time to properly maintain this project.
-If anyone is willing to step up and take over, I would happily hand over the
-reins to someone better suited than me. Please find my email at 
-https://github.com/jeffschenck and reach out if you're interested. 
-
-Thanks to everyone who's contributed and helped out with the project!
-
 Authorize Sauce
 ===============
 
-.. image:: https://img.shields.io/travis/jeffschenck/authorizesauce.svg
-   :target: https://travis-ci.org/jeffschenck/authorizesauce
-.. image:: https://img.shields.io/codecov/c/github/jeffschenck/authorizesauce.svg
-   :target: https://codecov.io/github/jeffschenck/authorizesauce
+.. image:: https://img.shields.io/travis/drewisme/authorizesauce.svg
+   :target: https://travis-ci.org/drewisme/authorizesauce
+.. image:: https://img.shields.io/codecov/c/github/drewisme/authorizesauce.svg
+   :target: https://codecov.io/github/drewisme/authorizesauce
 .. image:: https://img.shields.io/pypi/pyversions/AuthorizeSauce.svg
    :target: https://pypi.python.org/pypi/AuthorizeSauce
 .. image:: https://img.shields.io/pypi/l/AuthorizeSauce.svg
