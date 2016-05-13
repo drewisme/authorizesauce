@@ -1,9 +1,10 @@
-from six import BytesIO, binary_type, text_type, u
 from datetime import date
 
-import mock
-from unittest2 import TestCase
+from six import BytesIO, binary_type, u
 from six.moves.urllib.parse import parse_qsl, urlencode
+
+from unittest2 import TestCase
+import mock
 
 from authorize.apis.transaction import PROD_URL, TEST_URL, TransactionAPI
 from authorize.data import Address, CreditCard
@@ -60,10 +61,9 @@ PARSED_ERROR = {
 
 
 def _unicode_str(s):
-    if isinstance(s, text_type):
-        return s
     if isinstance(s, binary_type):
-        return s.decode('utf-8')
+        return s.decode('unicode_escape')
+    return s
 
 
 def _are_params_eq(params1, params2):
