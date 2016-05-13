@@ -22,6 +22,7 @@ SKIP_MESSAGE = 'Live tests only run if the AUTHORIZE_LIVE_TESTS ' \
 TEST_LOGIN_ID = '285tUPuS'
 TEST_TRANSACTION_KEY = '58JKJ4T95uee75wd'
 
+
 @skipUnless(os.environ.get('AUTHORIZE_LIVE_TESTS'), SKIP_MESSAGE)
 class AuthorizeLiveTests(TestCase):
     def setUp(self):

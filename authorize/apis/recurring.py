@@ -12,6 +12,7 @@ from authorize.exceptions import AuthorizeConnectionError, \
 PROD_URL = 'https://api.authorize.net/soap/v1/Service.asmx?WSDL'
 TEST_URL = 'https://apitest.authorize.net/soap/v1/Service.asmx?WSDL'
 
+
 class RecurringAPI(object):
     def __init__(self, login_id, transaction_key, debug=True, test=False):
         self.url = TEST_URL if debug else PROD_URL
@@ -51,19 +52,19 @@ class RecurringAPI(object):
             trial_occurrences=None):
         """
         Creates a recurring subscription payment on the CreditCard provided.
-        
+
         ``credit_card``
             The CreditCard instance to create the subscription for.
             Subscriptions require that you provide a first and last name with
             the credit card.
-        
+
         ``amount``
             The amount to charge every occurrence, either as an int, float,
             or Decimal.
-        
+
         ``start``
             The date to start the subscription, as a date object.
-        
+
         ``days``
             Provide either the days or the months argument to indicate the
             interval at which the subscription should recur.
@@ -71,16 +72,16 @@ class RecurringAPI(object):
         ``months``
             Provide either the days or the months argument to indicate the
             interval at which the subscription should recur.
-        
+
         ``occurrences``
             If provided, this is the number of times to charge the credit card
             before ending. If not provided, will last until canceled.
-        
+
         ``trial_amount``
             If you want to have a trial period at a lower amount for this
             subscription, provide the amount. (Either both trial arguments
             should be provided, or neither.)
-        
+
         ``trial_occurrences``
             If you want to have a trial period at a lower amount for this
             subscription, provide the number of occurences the trial period
@@ -135,7 +136,7 @@ class RecurringAPI(object):
                 'may not be in the past.')
         subscription.paymentSchedule.startDate = start.strftime('%Y-%m-%d')
         if occurrences is None:
-            occurrences = 9999 # That's what they say to do in the docs
+            occurrences = 9999  # That's what they say to do in the docs
         subscription.paymentSchedule.totalOccurrences = occurrences
 
         # If a trial period has been specified, add those fields
@@ -159,27 +160,27 @@ class RecurringAPI(object):
         update are optional, and only the provided fields will be udpated.
         Many of the fields have particular restrictions that must be followed,
         as noted below.
-        
+
         ``subscription_id``
             The subscription ID returned from the original create_subscription
             call for the subscription you want to update.
-        
+
         ``amount``
             The updated amount to charge every occurrence, either as an int,
             float, or Decimal.
-        
+
         ``start``
             The updated date to start the subscription, as a date object. This
             may only be udpated if no successful payments have been completed.
-        
+
         ``occurrences``
             This updates the number of times to charge the credit card before
             ending.
-        
+
         ``trial_amount``
             Updates the amount charged during the trial period. This may only
             be updated if you have not begun charging at the regular price.
-        
+
         ``trial_occurrences``
             Updates the number of occurrences for the trial period. This may
             only be updated if you have not begun charging at the regular
@@ -212,7 +213,7 @@ class RecurringAPI(object):
     def delete_subscription(self, subscription_id):
         """
         Deletes an existing recurring subscription payment.
-        
+
         ``subscription_id``
             The subscription ID returned from the original create_subscription
             call for the subscription you want to delete.

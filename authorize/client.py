@@ -22,11 +22,12 @@ from authorize.apis.customer import CustomerAPI
 from authorize.apis.recurring import RecurringAPI
 from authorize.apis.transaction import TransactionAPI
 
+
 class AuthorizeClient(object):
     """
     Instantiate the client with your login ID and transaction key from
     Authorize.net.
-    
+
     The ``debug`` option determines whether to use debug mode
     for the APIs. This should be ``True`` in development and staging, and
     should be ``False`` in production when you want to actually process credit
@@ -91,7 +92,7 @@ class AuthorizeCreditCard(object):
     This is the interface for working with a credit card. You use this to
     authorize or charge a credit card, as well as saving the credit card and
     creating recurring payments.
-    
+
     Any operation performed on this instance returns another instance you can
     work with, such as a transaction, saved card, or recurring payment.
     """
@@ -152,30 +153,30 @@ class AuthorizeCreditCard(object):
         """
         Creates a recurring payment with this credit card. Pass in the
         following arguments to set it up:
-        
+
         ``amount``
             The amount to charge at each interval.
-        
+
         ``start``
             The ``date`` or ``datetime`` at which to begin the recurring
             charges.
-        
+
         ``days``
             The number of days in the billing cycle. You must provide either
             the ``days`` argument or the ``months`` argument.
-        
+
         ``months``
             The number of months in the billing cycle. You must provide either
             the ``days`` argument or the ``months`` argument.
-        
+
         ``occurrences`` *(optional)*
             The number of times the card should be billed before stopping. If
             not specified, it will continue indefinitely.
-        
+
         ``trial_amount`` *(optional)*
             If you want to charge a lower amount for an introductory period,
             specify the amount.
-        
+
         ``trial_occurrences`` *(optional)*
             If you want to charge a lower amount for an introductory period,
             specify the number of occurrences that period should last.
@@ -196,11 +197,11 @@ class AuthorizeTransaction(object):
     This is the interface for working with a previous transaction. It is
     returned by many other operations, or you can save the transaction's
     ``uid`` and reinstantiate it later.
-    
+
     You can then use this transaction to settle a previous authorization,
     credit back a previous transaction, or void a previous authorization. Any
     such operation returns another transaction instance you can work with.
-    
+
     Additionally, if you need to access the full raw result of the transaction
     it is stored in the ``full_response`` attribute on the class.
     """
@@ -232,9 +233,9 @@ class AuthorizeTransaction(object):
         and the ``amount`` is the amount to credit the card. Returns an
         :class:`AuthorizeTransaction <authorize.client.AuthorizeTransaction>`
         instance representing the credit transaction.
-        
+
         Credit transactions are bound by a number of restrictions:
-        
+
         * The original transaction must be an existing, settled charge. (Note
           that this is different than merely calling the
           :meth:`AuthorizeTransaction.settle <authorize.client.AuthorizeTransaction.settle>`
@@ -274,7 +275,7 @@ class AuthorizeSavedCard(object):
     by the
     :meth:`AuthorizeCreditCard.save <authorize.client.AuthorizeCreditCard.save>`
     method, or you can save a saved card's ``uid`` and reinstantiate it later.
-    
+
     You can then use this saved card to create new authorizations, captures,
     and credits. Or you can delete this card from the Authorize.net database.
     The first three operations will all return a transaction instance to work
@@ -311,7 +312,7 @@ class AuthorizeSavedCard(object):
         transaction.full_response = response
         return transaction
 
-    def capture(self, amount,  cvv=None):
+    def capture(self, amount, cvv=None):
         """
         Capture a transaction immediately on this card for the specified
         amount. Returns an
@@ -400,7 +401,7 @@ class AuthorizeRecurring(object):
     :meth:`AuthorizeCreditCard.recurring <authorize.client.AuthorizeCreditCard.recurring>`
     method, or you can save a recurring payment's ``uid`` and reinstantiate it
     later.
-    
+
     The recurring payment will continue charging automatically, but if you
     want to make changes to an existing recurring payment or to cancel a
     recurring payment, this provides the interface.
@@ -422,21 +423,21 @@ class AuthorizeRecurring(object):
         ``amount`` *(optional)*
             The amount to charge at each interval. Will only be applied to
             future charges.
-        
+
         ``start`` *(optional)*
             The ``date`` or ``datetime`` at which to begin the recurring
             charges. You may only specify this option if the recurring charge
             has not yet begun.
-        
+
         ``occurrences`` *(optional)*
             The number of times the card should be billed before stopping. If
             not specified, it will continue indefinitely.
-        
+
         ``trial_amount`` *(optional)*
             If you want to charge a lower amount for an introductory period,
             specify the amount. You may specify this option only if there have
             not yet been any non-trial payments.
-        
+
         ``trial_occurrences`` *(optional)*
             If you want to charge a lower amount for an introductory period,
             specify the number of occurrences that period should last. You may

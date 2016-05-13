@@ -28,6 +28,7 @@ ERROR = AttrDict({
     })]],
 })
 
+
 class RecurringAPITests(TestCase):
     def setUp(self):
         self.patcher = mock.patch(

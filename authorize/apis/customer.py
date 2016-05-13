@@ -15,6 +15,7 @@ from authorize.exceptions import AuthorizeConnectionError, \
 PROD_URL = 'https://api.authorize.net/soap/v1/Service.asmx?WSDL'
 TEST_URL = 'https://apitest.authorize.net/soap/v1/Service.asmx?WSDL'
 
+
 class CustomerAPI(object):
     def __init__(self, login_id, transaction_key, debug=True, test=False):
         self.url = TEST_URL if debug else PROD_URL

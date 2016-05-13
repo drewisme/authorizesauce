@@ -16,6 +16,7 @@ TEST_CARD_NUMBERS = [
     ('diners', '38000000000006'),
 ]
 
+
 class CreditCardTests(TestCase):
     def setUp(self):
         self.YEAR = date.today().year + 10

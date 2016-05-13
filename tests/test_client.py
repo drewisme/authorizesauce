@@ -21,6 +21,7 @@ TRANSACTION_RESULT = {
     'transaction_id': '2171062816',
 }
 
+
 class ClientTests(TestCase):
     def setUp(self):
         self.transaction_api_patcher = mock.patch(

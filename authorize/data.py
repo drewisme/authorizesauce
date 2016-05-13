@@ -18,10 +18,11 @@ CARD_TYPES = {
     'diners': r'(30[0-5]\d{11}|(36|38)\d{12})$'
 }
 
+
 class CreditCard(object):
     """
     Represents a credit card that can be charged.
-    
+
     Pass in the credit card number, expiration date, CVV code, and optionally
     a first name and last name. The card will be validated upon instatiation
     and will raise an
