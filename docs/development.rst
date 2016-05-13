@@ -22,7 +22,7 @@ file:
 
     pip install -r requirements.txt
 
-.. _Github page: https://github.com/jeffschenck/authorizesauce
+.. _Github page: https://github.com/drewisme/authorizesauce
 .. _mock: http://www.voidspace.org.uk/python/mock/
 .. _unittest2: http://pypi.python.org/pypi/unittest2
 .. _sphinx: http://sphinx.pocoo.org/
@@ -114,4 +114,4 @@ If you have a bug to report, please do so on our `Github issues`_ page. If
 you've got a fork with a new feature or a bug fix with tests, please send us a
 pull request.
 
-.. _Github issues: https://github.com/jeffschenck/authorizesauce/issues
+.. _Github issues: https://github.com/drewisme/authorizesauce/issues
