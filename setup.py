@@ -78,7 +78,7 @@ setup(
         'authorize.apis',
     ],
     classifiers=[
-        'Development Status :: 5 - Beta',
+        'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
