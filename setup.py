@@ -44,7 +44,7 @@ For the full documentation, please visit us at `Read the Docs`_. Thanks to
 Chewse_ for supporting the development and open-sourcing of this library.
 Authorize Sauce is released under the `MIT License`_.
 
-.. _Read the Docs: http://authorize-sauce.readthedocs.org/
+.. _Read the Docs: http://authorizesauce.readthedocs.io/
 .. _Chewse: https://www.chewse.com/
 .. _MIT License: http://www.opensource.org/licenses/mit-license
 """
@@ -64,8 +64,8 @@ setup(
     version='0.5.0',
     author='Jeff Schenck',
     author_email='jmschenck@gmail.com',
-    url='http://authorize-sauce.readthedocs.org/',
-    download_url='https://github.com/jeffschenck/authorizesauce',
+    url='http://authorizesauce.readthedocs.io/',
+    download_url='https://github.com/drewisme/authorizesauce',
     description='An awesome-sauce Python library for accessing the Authorize.net API. Sweet!',
     long_description=__doc__,
     license='MIT',

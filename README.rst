@@ -52,6 +52,6 @@ For the full documentation, please visit us at `Read the Docs`_. Thanks to
 Chewse_ for supporting the development and open-sourcing of this library.
 Authorize Sauce is released under the `MIT License`_.
 
-.. _Read the Docs: http://authorize-sauce.readthedocs.org/
+.. _Read the Docs: http://authorizesauce.readthedocs.io/
 .. _Chewse: https://www.chewse.com/
 .. _MIT License: http://www.opensource.org/licenses/mit-license
