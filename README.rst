@@ -1,6 +1,25 @@
 Authorize Sauce
 ===============
 
+
+🔥 WARNING 🔥
+-------
+Authorize.Net has deprecated their SOAP APIs and plans to end-of-life them at some point. This applies to the Customer and Recurring APIs in this library. The Transaction API uses AIM and is still currently supported but Authorize.Net recommends using the new API.
+See https://developer.authorize.net/api/upgrade_guide/ under `API Support Status`
+
+*Recommend moving to official Authorize.Net SDK for python:*
+
+* https://github.com/AuthorizeNet/sdk-python
+* https://github.com/AuthorizeNet/sample-code-python
+
+Also, see the forum issue with the SOAP API:
+
+* https://community.developer.authorize.net/t5/Integration-and-Testing/CIM-SOAP-API-returning-a-550-error-on-sandbox-and-production/m-p/62769/highlight/true#M37030
+
+😢
+
+----
+
 .. image:: https://img.shields.io/travis/drewisme/authorizesauce.svg
    :target: https://travis-ci.org/drewisme/authorizesauce
 .. image:: https://img.shields.io/codecov/c/github/drewisme/authorizesauce.svg
